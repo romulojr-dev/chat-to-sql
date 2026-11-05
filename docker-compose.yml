@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: cts
+      POSTGRES_PASSWORD: cts_dev_pw
+      POSTGRES_DB: chattosql
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d
+volumes:
+  pgdata:
