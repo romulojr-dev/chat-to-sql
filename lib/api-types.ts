@@ -11,6 +11,12 @@ export type RunSuccess = {
   chart: ChartSpec | null;
 };
 
+export type SuggestSuccess = {
+  sql: string;
+  explanation: string;
+  usage: { inputTokens: number; outputTokens: number };
+};
+
 export type ApiError = {
   error: { code: string; message: string };
 };

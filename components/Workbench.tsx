@@ -1,72 +1,137 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { QuestionBox } from "@/components/QuestionBox";
 import { ResultsView } from "@/components/ResultsView";
 import { SqlPreview } from "@/components/SqlPreview";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ApiError, RunSuccess } from "@/lib/api-types";
+import type { ApiError, RunSuccess, SuggestSuccess } from "@/lib/api-types";
 
-const SAMPLE_SQL = `SELECT order_status, count(*) AS orders
-FROM orders
-GROUP BY 1
-ORDER BY 2 DESC`;
+type SuggestState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "done"; explanation: string }
+  | { status: "error"; code: string; message: string };
 
-type State =
+type RunState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "done"; result: RunSuccess }
   | { status: "error"; message: string };
 
-export function Workbench() {
-  const [sql, setSql] = useState(SAMPLE_SQL);
-  const [state, setState] = useState<State>({ status: "idle" });
-  const controller = useRef<AbortController | null>(null);
+/** POST JSON and return either the parsed success body or the API's error. */
+async function postJson<T>(
+  url: string,
+  body: unknown,
+  signal: AbortSignal,
+): Promise<{ ok: true; data: T } | { ok: false; code: string; message: string }> {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+    signal,
+  });
+  const json = (await res.json().catch(() => null)) as T | ApiError | null;
+  if (res.ok && json && !("error" in (json as object))) return { ok: true, data: json as T };
+  const err = (json as ApiError | null)?.error;
+  return { ok: false, code: err?.code ?? "unknown", message: err?.message ?? "Something went wrong. Please try again." };
+}
 
-  async function run() {
-    controller.current?.abort();
+export function Workbench() {
+  const [question, setQuestion] = useState("");
+  const [sql, setSql] = useState("");
+  const [suggest, setSuggest] = useState<SuggestState>({ status: "idle" });
+  const [run, setRun] = useState<RunState>({ status: "idle" });
+  const suggestCtrl = useRef<AbortController | null>(null);
+  const runCtrl = useRef<AbortController | null>(null);
+
+  async function onSuggest() {
+    suggestCtrl.current?.abort();
+    runCtrl.current?.abort();
     const ctrl = new AbortController();
-    controller.current = ctrl;
-    setState({ status: "loading" });
+    suggestCtrl.current = ctrl;
+    setSuggest({ status: "loading" });
+    setRun({ status: "idle" }); // a new question clears stale results
+    setSql("");
 
     try {
-      const res = await fetch("/api/run", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sql }),
-        signal: ctrl.signal,
-      });
-      const body = (await res.json()) as RunSuccess | ApiError;
-      if (!res.ok || "error" in body) {
-        setState({ status: "error", message: "error" in body ? body.error.message : "The query failed." });
+      const r = await postJson<SuggestSuccess>("/api/suggest", { question }, ctrl.signal);
+      if (r.ok) {
+        setSql(r.data.sql);
+        setSuggest({ status: "done", explanation: r.data.explanation });
       } else {
-        setState({ status: "done", result: body });
+        setSuggest({ status: "error", code: r.code, message: r.message });
       }
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
-      setState({ status: "error", message: "Could not reach the server. Please try again." });
+      setSuggest({ status: "error", code: "network", message: "Could not reach the server. Please try again." });
+    }
+  }
+
+  async function onRun() {
+    runCtrl.current?.abort();
+    const ctrl = new AbortController();
+    runCtrl.current = ctrl;
+    setRun({ status: "loading" });
+
+    try {
+      const r = await postJson<RunSuccess>("/api/run", { sql }, ctrl.signal);
+      setRun(r.ok ? { status: "done", result: r.data } : { status: "error", message: r.message });
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      setRun({ status: "error", message: "Could not reach the server. Please try again." });
     }
   }
 
   return (
     <div className="space-y-8">
-      <SqlPreview sql={sql} onChange={setSql} onRun={run} running={state.status === "loading"} />
+      <QuestionBox question={question} onChange={setQuestion} onSubmit={onSuggest} busy={suggest.status === "loading"} />
 
-      <section aria-live="polite" aria-busy={state.status === "loading"} className="space-y-3">
-        {state.status === "loading" && (
-          <div className="space-y-2" role="status" aria-label="Running query">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-40 w-full" />
+      <section aria-live="polite" aria-busy={suggest.status === "loading"} className="space-y-3">
+        {suggest.status === "loading" && (
+          <div className="space-y-2" role="status" aria-label="Writing a query">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-28 w-full" />
           </div>
         )}
-        {state.status === "error" && (
-          <Alert variant="destructive">
-            <AlertTitle>That query could not run</AlertTitle>
-            <AlertDescription>{state.message}</AlertDescription>
+        {suggest.status === "error" && (
+          <Alert variant={suggest.code === "cannot_answer" ? "default" : "destructive"}>
+            <AlertTitle>
+              {suggest.code === "cannot_answer" ? "I can't answer that from this data" : "I couldn't suggest a query"}
+            </AlertTitle>
+            <AlertDescription>{suggest.message}</AlertDescription>
           </Alert>
         )}
-        {state.status === "done" && <ResultsView result={state.result} />}
       </section>
+
+      {suggest.status === "done" && (
+        <>
+          <SqlPreview
+            sql={sql}
+            explanation={suggest.explanation}
+            onChange={setSql}
+            onRun={onRun}
+            running={run.status === "loading"}
+          />
+
+          <section aria-live="polite" aria-busy={run.status === "loading"} className="space-y-3">
+            {run.status === "loading" && (
+              <div className="space-y-2" role="status" aria-label="Running query">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-40 w-full" />
+              </div>
+            )}
+            {run.status === "error" && (
+              <Alert variant="destructive">
+                <AlertTitle>That query could not run</AlertTitle>
+                <AlertDescription>{run.message}</AlertDescription>
+              </Alert>
+            )}
+            {run.status === "done" && <ResultsView result={run.result} />}
+          </section>
+        </>
+      )}
     </div>
   );
 }
