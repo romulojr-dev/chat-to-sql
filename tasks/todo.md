@@ -21,7 +21,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
 
 ## Phase 2: Safety core
 
-- [ ] **T3: SQL validator + safety set** (M)
+- [x] **T3: SQL validator + safety set** (M)
   - Acceptance: `validateReadOnlySql` accepts a single `SELECT`/`WITH...SELECT`; rejects multi-statement, DML/DDL, `COPY`, `SET`, system catalogs, non-allowlisted functions (`pg_sleep`, `pg_read_file`, `dblink`...), oversized input; parser chosen after a spike; committed safety set of 30+ blocked inputs and an allowed set including every eval-style query shape
   - Verify: `npm test -- lib/sql/validate` all green; safety set 100% blocked
   - Depends on: T1

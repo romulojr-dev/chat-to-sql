@@ -7,18 +7,9 @@
  * Requires DATABASE_URL_ADMIN and READONLY_PASSWORD.
  */
 import { Pool } from "@neondatabase/serverless";
+import { DATASET_TABLES } from "../lib/schema/tables";
 
 const ROLE = "readonly";
-const DATASET_TABLES = [
-  "customers",
-  "orders",
-  "order_items",
-  "order_payments",
-  "order_reviews",
-  "products",
-  "sellers",
-  "product_category_name_translation",
-];
 
 function requireEnv(name: string): string {
   const v = process.env[name];

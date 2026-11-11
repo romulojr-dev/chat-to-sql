@@ -38,7 +38,7 @@ A public web app where a non-technical user types a question in plain English, t
 - Backend: Next.js route handlers (Node runtime), no separate server
 - Database: Neon Postgres (free tier), `@neondatabase/serverless` driver
 - LLM: Anthropic Claude via `@anthropic-ai/sdk`, model ID in an env var (default to a smaller, cheaper model; compare in eval)
-- SQL validation: a Postgres-dialect parser (candidates: `pgsql-parser` or `node-sql-parser`, to be chosen in the plan)
+- SQL validation: `libpg-query` (the real PostgreSQL parser, WASM). Chosen over `node-sql-parser`, which rejects valid Postgres syntax and so cannot be trusted to read edge cases.
 - Validation of API payloads: Zod
 - UI: shadcn/ui components (copied into the repo, built on Radix UI primitives) + Tailwind CSS
 - Charts: shadcn/ui `chart` component, which wraps Recharts
@@ -129,10 +129,11 @@ TypeScript strict, no `any` in `lib/`. Pure functions for validation and chart s
 // lib/sql/validate.ts
 export type ValidationResult =
   | { ok: true; sql: string }
-  | { ok: false; reason: string };
+  | { ok: false; code: ValidationCode; reason: string };
 
-export function validateReadOnlySql(sql: string): ValidationResult {
-  // parse -> exactly one statement -> SELECT only -> function allowlist
+export async function validateReadOnlySql(sql: string): Promise<ValidationResult> {
+  // parse (libpg-query) -> exactly one statement -> SELECT only
+  // -> table allowlist -> function allowlist
 }
 ```
 Naming: `camelCase` functions, `PascalCase` components and types, `kebab-case` for non-component files. Formatting and lint enforced by ESLint + Prettier.

@@ -1,0 +1,302 @@
+[
+  {
+    "sql": "DROP TABLE orders",
+    "why": "DDL"
+  },
+  {
+    "sql": "DELETE FROM orders",
+    "why": "DELETE"
+  },
+  {
+    "sql": "UPDATE orders SET order_status = 'x'",
+    "why": "UPDATE"
+  },
+  {
+    "sql": "INSERT INTO sellers (seller_id) VALUES ('x')",
+    "why": "INSERT"
+  },
+  {
+    "sql": "TRUNCATE orders",
+    "why": "TRUNCATE"
+  },
+  {
+    "sql": "CREATE TABLE evil (id int)",
+    "why": "CREATE TABLE"
+  },
+  {
+    "sql": "ALTER TABLE orders ADD COLUMN x int",
+    "why": "ALTER"
+  },
+  {
+    "sql": "GRANT ALL ON orders TO PUBLIC",
+    "why": "GRANT"
+  },
+  {
+    "sql": "CREATE EXTENSION dblink",
+    "why": "CREATE EXTENSION"
+  },
+  {
+    "sql": "CREATE FUNCTION f() RETURNS int AS 'select 1' LANGUAGE sql",
+    "why": "CREATE FUNCTION"
+  },
+  {
+    "sql": "COPY orders TO STDOUT",
+    "why": "COPY"
+  },
+  {
+    "sql": "COPY (SELECT 1) TO PROGRAM 'ls'",
+    "why": "COPY TO PROGRAM"
+  },
+  {
+    "sql": "SET default_transaction_read_only = off",
+    "why": "SET"
+  },
+  {
+    "sql": "RESET ALL",
+    "why": "RESET"
+  },
+  {
+    "sql": "SHOW server_version",
+    "why": "SHOW"
+  },
+  {
+    "sql": "DO $$ BEGIN DELETE FROM orders; END $$",
+    "why": "anonymous code block"
+  },
+  {
+    "sql": "CALL foo()",
+    "why": "CALL"
+  },
+  {
+    "sql": "VACUUM orders",
+    "why": "VACUUM"
+  },
+  {
+    "sql": "LISTEN x",
+    "why": "LISTEN"
+  },
+  {
+    "sql": "PREPARE p AS SELECT 1",
+    "why": "PREPARE"
+  },
+  {
+    "sql": "EXECUTE p",
+    "why": "EXECUTE"
+  },
+  {
+    "sql": "BEGIN; DROP TABLE orders; COMMIT",
+    "why": "transaction control and DDL"
+  },
+  {
+    "sql": "SELECT 1; DROP TABLE orders",
+    "why": "stacked statement"
+  },
+  {
+    "sql": "SELECT 1; SELECT 2",
+    "why": "two statements"
+  },
+  {
+    "sql": "SELECT 1; DROP TABLE orders --",
+    "why": "stacked statement with trailing comment"
+  },
+  {
+    "sql": "SELECT * FROM orders; SELECT pg_sleep(100)",
+    "why": "stacked sleep"
+  },
+  {
+    "sql": "WITH d AS (DELETE FROM orders RETURNING *) SELECT * FROM d",
+    "why": "DELETE hidden in CTE"
+  },
+  {
+    "sql": "WITH u AS (UPDATE orders SET order_status = 'x' RETURNING *) SELECT * FROM u",
+    "why": "UPDATE hidden in CTE"
+  },
+  {
+    "sql": "WITH i AS (INSERT INTO sellers (seller_id) VALUES ('x') RETURNING *) SELECT * FROM i",
+    "why": "INSERT hidden in CTE"
+  },
+  {
+    "sql": "SELECT * INTO newt FROM orders",
+    "why": "SELECT INTO creates a table"
+  },
+  {
+    "sql": "SELECT * FROM orders FOR UPDATE",
+    "why": "row locks"
+  },
+  {
+    "sql": "SELECT * FROM orders FOR SHARE",
+    "why": "row locks"
+  },
+  {
+    "sql": "EXPLAIN ANALYZE DELETE FROM orders",
+    "why": "EXPLAIN ANALYZE executes"
+  },
+  {
+    "sql": "EXPLAIN SELECT 1",
+    "why": "only SELECT allowed at top level"
+  },
+  {
+    "sql": "SELECT pg_sleep(10)",
+    "why": "resource exhaustion"
+  },
+  {
+    "sql": "SELECT pg_catalog.pg_sleep(10)",
+    "why": "schema-qualified sleep"
+  },
+  {
+    "sql": "SELECT public.pg_sleep(10)",
+    "why": "wrong schema for builtin"
+  },
+  {
+    "sql": "SELECT * FROM orders o, LATERAL pg_sleep(1)",
+    "why": "sleep in FROM"
+  },
+  {
+    "sql": "SELECT pg_read_file('/etc/passwd')",
+    "why": "file read"
+  },
+  {
+    "sql": "SELECT * FROM pg_ls_dir('.')",
+    "why": "directory listing"
+  },
+  {
+    "sql": "SELECT lo_import('/etc/passwd')",
+    "why": "large object import"
+  },
+  {
+    "sql": "SELECT * FROM dblink('host=x', 'select 1') AS t(a int)",
+    "why": "dblink"
+  },
+  {
+    "sql": "SELECT pg_terminate_backend(1)",
+    "why": "kill sessions"
+  },
+  {
+    "sql": "SELECT set_config('statement_timeout', '0', false)",
+    "why": "setting changes via function"
+  },
+  {
+    "sql": "SELECT current_setting('server_version')",
+    "why": "server info"
+  },
+  {
+    "sql": "SELECT version()",
+    "why": "server info"
+  },
+  {
+    "sql": "SELECT query_to_xml('delete from orders', true, true, '')",
+    "why": "executes a query string"
+  },
+  {
+    "sql": "SELECT current_user",
+    "why": "identity disclosure"
+  },
+  {
+    "sql": "SELECT session_user",
+    "why": "identity disclosure"
+  },
+  {
+    "sql": "SELECT * FROM pg_catalog.pg_roles",
+    "why": "system catalog"
+  },
+  {
+    "sql": "SELECT * FROM pg_user",
+    "why": "system view"
+  },
+  {
+    "sql": "SELECT * FROM pg_stat_activity",
+    "why": "system view"
+  },
+  {
+    "sql": "SELECT * FROM information_schema.tables",
+    "why": "information_schema"
+  },
+  {
+    "sql": "SELECT * FROM neon_auth.\"user\"",
+    "why": "other schema"
+  },
+  {
+    "sql": "SELECT * FROM secrets",
+    "why": "table not in dataset"
+  },
+  {
+    "sql": "SELECT 'pg_authid'::regclass",
+    "why": "reg cast probes catalog"
+  },
+  {
+    "sql": "SELECT $1",
+    "why": "bind parameters not supported"
+  },
+  {
+    "sql": "",
+    "why": "empty"
+  },
+  {
+    "sql": "   \n  ",
+    "why": "whitespace only"
+  },
+  {
+    "sql": "-- just a comment",
+    "why": "comment only"
+  },
+  {
+    "sql": "hello world",
+    "why": "not SQL"
+  },
+  {
+    "sql": "SEL/**/ECT 1",
+    "why": "comment splitting a keyword"
+  },
+  {
+    "sql": "SELECT 1 FROM",
+    "why": "syntax error"
+  },
+  {
+    "sql": "SELECT * FROM orders WHERE (SELECT pg_sleep(5)) IS NULL",
+    "why": "sleep nested in WHERE subquery"
+  },
+  {
+    "sql": "SELECT * FROM ROWS FROM (pg_sleep(5))",
+    "why": "sleep via ROWS FROM"
+  },
+  {
+    "sql": "SELECT \"PG_SLEEP\"(5)",
+    "why": "quoted uppercase function name"
+  },
+  {
+    "sql": "SELECT CAST('pg_authid' AS regclass)",
+    "why": "CAST syntax to reg type"
+  },
+  {
+    "sql": "SELECT 'pg_authid'::pg_catalog.regclass",
+    "why": "schema-qualified reg type"
+  },
+  {
+    "sql": "SELECT nextval('orders_seq')",
+    "why": "sequence function"
+  },
+  {
+    "sql": "SELECT orders.order_id FROM orders WHERE order_id = ANY(ARRAY(SELECT pg_read_file('x')))",
+    "why": "file read nested in ARRAY subquery"
+  },
+  {
+    "sql": "SELECT count(*) FILTER (WHERE pg_sleep(1) IS NULL) FROM orders",
+    "why": "sleep in aggregate FILTER"
+  },
+  {
+    "sql": "WITH x AS (SELECT 1) SELECT * FROM x, pg_roles",
+    "why": "catalog view next to a CTE"
+  },
+  {
+    "sql": "SELECT * FROM orders o JOIN pg_catalog.pg_authid a ON true",
+    "why": "catalog join"
+  },
+  {
+    "sql": "SELECT 1\u0000; DROP TABLE orders",
+    "why": "null byte before stacked statement"
+  },
+  {
+    "sql": "SELECT * FROM orders WHERE order_id = 'x' OR (SELECT count(*) FROM information_schema.columns) > 0",
+    "why": "information_schema in subquery"
+  }
+]
