@@ -40,11 +40,11 @@ Loaded by `npm run db:seed` (idempotent: drops and recreates, run twice with ide
 
 ## Neon free plan (checked 2026-11-11)
 - Per the Neon docs page (updated 2026-10-01): 1 GB storage per project, 100 CU-hours of compute per project per month, scale to zero after 5 minutes idle, no overage billing. Writes fail once storage is full.
-- Some third-party pages still say 0.5 GB. Confirm the real quota in the Neon console after creating the project.
-- Estimate: well under 200 MB loaded with indexes. This is unverified until the seed runs. If it doesn't fit, sample rows instead of changing dataset.
+- Some third-party pages still say 0.5 GB. **Confirmed 1 GB in the project's Neon console (2026-11-12).**
+- The loaded dataset is 136 MB (measured), so no sampling is needed.
 
 ## Open items for T2
 - [x] CSVs downloaded; Neon project created; connection strings in `.env.local`.
 - [x] Table list verified against the download; loaded size measured (136 MB).
-- [ ] Confirm the quota shown in the Neon console (sources disagree: 0.5 GB vs 1 GB).
+- [x] Quota confirmed in the Neon console: 1 GB (dataset uses 136 MB, about 13%).
 - [ ] Create the read-only role and point the app's `DATABASE_URL` at it.
