@@ -55,7 +55,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
 
 ## Phase 4: LLM
 
-- [ ] **T7: Schema description + prompt + response parser** (M)
+- [x] **T7: Schema description + prompt + response parser** (M)
   - Acceptance: `lib/llm` builds the system prompt from table/column descriptions and rules; question passed as data; parser extracts `{sql, explanation}` or a typed "cannot answer"; model ID from env; token usage returned; no UI imports
   - Verify: unit tests with mocked SDK for good output, malformed output, refusal, and prompt-injection strings
   - Depends on: T1
