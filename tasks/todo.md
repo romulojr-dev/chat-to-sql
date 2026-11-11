@@ -38,7 +38,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
 
 ## Phase 3: First vertical slice (no LLM)
 
-- [ ] **T5: `/api/run` + minimal UI table** (M)
+- [x] **T5: `/api/run` + minimal UI table** (M)
   - Acceptance: `POST /api/run` validates (Zod + `validateReadOnlySql`), executes, returns the contract in SPEC; UI has an SQL textbox with a Run button and a shadcn table, loading skeleton, readable error alerts for 400/408
   - Verify: unit test for route handler; manual: run a sample `SELECT`, a blocked query shows a friendly error
   - Depends on: T3, T4
