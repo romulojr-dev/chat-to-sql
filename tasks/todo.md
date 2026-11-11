@@ -10,14 +10,14 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: none
   - Files: `package.json`, `tsconfig.json`, `components.json`, `app/page.tsx`, `.env.example`
 
-- [ ] **T2: Dataset, Neon DB, read-only role** (M)
+- [x] **T2: Dataset, Neon DB, read-only role** (M)
   - Acceptance: Olist license checked and recorded in `docs/`; current Neon free limits checked; `npm run db:seed` is idempotent and loads the data with indexes; a `readonly` role has SELECT only on dataset tables; row counts documented
   - Verify: seed twice -> same counts; connecting as `readonly`, `INSERT`/`DROP` fail with permission errors; DB size < free-tier limit with headroom
   - Depends on: T1
   - Files: `scripts/seed.ts`, `scripts/roles.sql`, `docs/dataset.md`, `.env.example`
 
 ### Checkpoint 1: Foundation
-- [ ] Build, lint, typecheck pass; DB seeded; read-only role verified; dataset license and size confirmed (if not, stop and decide on dataset)
+- [x] Build, lint, typecheck pass; DB seeded; read-only role verified; dataset license and size confirmed (if not, stop and decide on dataset)
 
 ## Phase 2: Safety core
 

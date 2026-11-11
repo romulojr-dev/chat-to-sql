@@ -47,4 +47,4 @@ Loaded by `npm run db:seed` (idempotent: drops and recreates, run twice with ide
 - [x] CSVs downloaded; Neon project created; connection strings in `.env.local`.
 - [x] Table list verified against the download; loaded size measured (136 MB).
 - [x] Quota confirmed in the Neon console: 1 GB (dataset uses 136 MB, about 13%).
-- [ ] Create the read-only role and point the app's `DATABASE_URL` at it.
+- [x] Read-only role created (`npm run db:role`); `DATABASE_URL` points at it locally and in Vercel. Vercel side is untested until the first DB-backed route (T5).
