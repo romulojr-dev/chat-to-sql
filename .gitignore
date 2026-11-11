@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local dataset downloads (license: CC BY-NC-SA, do not commit)
+/data/
