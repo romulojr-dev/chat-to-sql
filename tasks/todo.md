@@ -27,7 +27,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: T1
   - Files: `lib/sql/validate.ts`, `tests/validate.test.ts`, `tests/safety-set.json`
 
-- [ ] **T4: Read-only executor** (S)
+- [x] **T4: Read-only executor** (S)
   - Acceptance: `execute` runs in `BEGIN READ ONLY` as the `readonly` role, enforces statement timeout and 1,000-row cap, returns `{columns, rows, truncated, durationMs}`
   - Verify: integration tests: timeout fires on slow query; cap sets `truncated`; a write attempted with the validator bypassed must still fail at the DB layer
   - Depends on: T2

@@ -20,8 +20,11 @@ export type ValidationCode =
   | "function_not_allowed"
   | "table_not_allowed";
 
+/** SQL that passed validateReadOnlySql. The executor only accepts this type. */
+export type ValidatedSql = string & { readonly __brand: "ValidatedSql" };
+
 export type ValidationResult =
-  | { ok: true; sql: string }
+  | { ok: true; sql: ValidatedSql }
   | { ok: false; code: ValidationCode; reason: string };
 
 const ALLOWED_FUNCTIONS = new Set([
@@ -200,7 +203,7 @@ export async function validateReadOnlySql(input: string): Promise<ValidationResu
     collectCteNames(stmt, ctes);
     walk(stmt, ctes);
 
-    return { ok: true, sql: input.trim().replace(/[;\s]+$/, "") };
+    return { ok: true, sql: input.trim().replace(/[;\s]+$/, "") as ValidatedSql };
   } catch (e) {
     if (e instanceof Reject) return { ok: false, code: e.code, reason: e.reason };
     // Fail closed: anything unexpected is a rejection, never an allow.
