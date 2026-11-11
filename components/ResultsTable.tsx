@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { RunSuccess } from "@/lib/api-types";
 
@@ -21,19 +20,7 @@ export function ResultsTable({ result }: { result: RunSuccess }) {
   });
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="secondary">
-          {result.rowCount.toLocaleString()} {result.rowCount === 1 ? "row" : "rows"}
-        </Badge>
-        <Badge variant="outline">{result.durationMs} ms</Badge>
-        {result.truncated && (
-          <span className="text-muted-foreground text-sm">
-            Showing the first {result.rowCount.toLocaleString()} rows. Add a filter or LIMIT to narrow the result.
-          </span>
-        )}
-      </div>
-
+    <div>
       {result.rowCount === 0 ? (
         <p className="text-muted-foreground text-sm">The query ran but returned no rows.</p>
       ) : (

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { selectChart } from "@/lib/chart/select";
 import { executeReadOnly, QueryError } from "@/lib/sql/execute";
 import { MAX_SQL_LENGTH, validateReadOnlySql } from "@/lib/sql/validate";
 
@@ -48,7 +49,7 @@ export async function POST(request: Request) {
       rowCount: result.rows.length,
       truncated: result.truncated,
       durationMs: result.durationMs,
-      chart: null, // chart selection arrives in T6
+      chart: selectChart(result.columns, result.rows),
     });
   } catch (e) {
     if (e instanceof QueryError) {

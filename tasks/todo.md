@@ -44,7 +44,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: T3, T4
   - Files: `app/api/run/route.ts`, `components/SqlPreview.tsx`, `components/ResultsTable.tsx`, `app/page.tsx`
 
-- [ ] **T6: Chart selection + chart UI** (S)
+- [x] **T6: Chart selection + chart UI** (S)
   - Acceptance: `selectChart` implements SPEC rules (bar, line, big number, none); `ResultChart` uses shadcn `chart`; tabs switch table/chart; chart has a text alternative
   - Verify: `npm test -- lib/chart` table-driven tests; manual check with 3 result shapes
   - Depends on: T5

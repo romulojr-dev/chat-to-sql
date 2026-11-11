@@ -1,4 +1,4 @@
-import { Pool } from "@neondatabase/serverless";
+import { Pool, types } from "@neondatabase/serverless";
 import type { ValidatedSql } from "./validate";
 
 /**
@@ -50,6 +50,21 @@ function getPool(): Pool {
 
 const QUERY_CANCELED = "57014"; // statement_timeout
 
+const TIMESTAMP_OID = 1114; // timestamp without time zone
+const DATE_OID = 1082;
+
+/**
+ * Return `timestamp` and `date` as the raw strings Postgres sends. The default
+ * parser builds a Date in the server's local timezone, which then serializes as
+ * a shifted UTC instant (e.g. 2018-01-01 becomes 2017-12-31T16:00Z on a UTC+8 machine).
+ */
+const rawDateTypes = {
+  getTypeParser: (oid: number, format?: "text" | "binary") =>
+    oid === TIMESTAMP_OID || oid === DATE_OID
+      ? (value: string) => value
+      : types.getTypeParser(oid, format),
+};
+
 export async function executeReadOnly(
   sql: ValidatedSql,
   { maxRows = DEFAULT_MAX_ROWS, timeoutMs = DEFAULT_TIMEOUT_MS, pool = getPool() }: ExecuteOptions = {},
@@ -64,7 +79,7 @@ export async function executeReadOnly(
     await client.query("BEGIN READ ONLY");
     await client.query(`SET LOCAL statement_timeout = ${timeoutMs}`);
     await client.query(`DECLARE user_query NO SCROLL CURSOR FOR\n${sql}`);
-    const res = await client.query({ text: `FETCH ${maxRows + 1} FROM user_query`, rowMode: "array" });
+    const res = await client.query({ text: `FETCH ${maxRows + 1} FROM user_query`, rowMode: "array", types: rawDateTypes });
     await client.query("ROLLBACK");
 
     return {

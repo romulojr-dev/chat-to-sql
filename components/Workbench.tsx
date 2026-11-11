@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { ResultsTable } from "@/components/ResultsTable";
+import { ResultsView } from "@/components/ResultsView";
 import { SqlPreview } from "@/components/SqlPreview";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,7 +65,7 @@ export function Workbench() {
             <AlertDescription>{state.message}</AlertDescription>
           </Alert>
         )}
-        {state.status === "done" && <ResultsTable result={state.result} />}
+        {state.status === "done" && <ResultsView result={state.result} />}
       </section>
     </div>
   );

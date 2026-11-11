@@ -35,6 +35,14 @@ describe.skipIf(!process.env.DATABASE_URL)("executeReadOnly (integration, real D
     expect(Number(r.rows[0][0])).toBe(99441);
   });
 
+  it("returns timestamp and date columns as timezone-independent strings", async () => {
+    const r = await executeReadOnly(
+      raw("SELECT date_trunc('month', order_purchase_timestamp) AS m, order_purchase_timestamp::date AS d FROM orders ORDER BY 1 LIMIT 1"),
+    );
+    // Not Date objects: a Date would shift with the server's local timezone.
+    expect(r.rows[0]).toEqual(["2016-09-01 00:00:00", "2016-09-04"]);
+  });
+
   it("stops slow queries with a timeout error", async () => {
     const started = Date.now();
     await expect(

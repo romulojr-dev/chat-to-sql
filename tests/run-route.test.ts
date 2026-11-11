@@ -93,6 +93,7 @@ describe.skipIf(!process.env.DATABASE_URL)("POST /api/run (integration, real DB)
     expect(body.rows[0][0]).toBe("delivered");
     expect(body.truncated).toBe(false);
     expect(typeof body.durationMs).toBe("number");
-    expect(body.chart).toBeNull();
+    expect(body.chart).toMatchObject({ type: "bar", xLabel: "order_status", yLabel: "orders" });
+    expect(body.chart.data[0]).toEqual({ x: "delivered", y: 96478 });
   }, 30_000);
 });

@@ -1,3 +1,5 @@
+import type { ChartSpec } from "./chart/select";
+
 /** Shapes returned by /api/run. Shared by the route handler and the UI. */
 
 export type RunSuccess = {
@@ -6,7 +8,7 @@ export type RunSuccess = {
   rowCount: number;
   truncated: boolean;
   durationMs: number;
-  chart: null; // populated in T6
+  chart: ChartSpec | null;
 };
 
 export type ApiError = {
