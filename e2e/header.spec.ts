@@ -10,12 +10,18 @@ async function open(page: Page) {
 const isDark = (page: Page) => page.evaluate(() => document.documentElement.classList.contains("dark"));
 
 test.describe("header", () => {
-  test("shows the name as text, with no logo image", async ({ page }) => {
-    await open(page);
-    const header = page.getByRole("banner");
-    await expect(header.getByRole("heading", { name: "SiyasatQL" })).toBeVisible();
-    await expect(header.getByRole("img")).toHaveCount(0);
-  });
+  for (const [scheme, file] of [["light", "siyasatql-mark.svg"], ["dark", "siyasatql-mark-dark.svg"]] as const) {
+    test(`shows the pixel logo (${scheme} variant) as the page heading`, async ({ page }) => {
+      await page.emulateMedia({ colorScheme: scheme });
+      await open(page);
+      const header = page.getByRole("banner");
+      await expect(header.getByRole("heading", { name: "SiyasatQL" })).toBeVisible();
+      // Only the variant for the current theme is exposed; the other one is display:none.
+      const logo = header.getByRole("img", { name: "SiyasatQL" });
+      await expect(logo).toHaveCount(1);
+      await expect(logo).toHaveAttribute("src", new RegExp(file.replace(".", "\.") + "$"));
+    });
+  }
 
   test("has a theme toggle, a divider, then mail, GitHub and LinkedIn links", async ({ page }) => {
     await open(page);
