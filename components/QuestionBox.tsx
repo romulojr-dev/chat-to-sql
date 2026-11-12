@@ -1,4 +1,4 @@
-import { ArrowUpIcon } from "lucide-react";
+import { CornerDownLeftIcon } from "lucide-react";
 import type { Ref } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -42,13 +42,13 @@ export function QuestionBox({ question, onChange, onSubmit, inputRef }: Props) {
         rows={1}
         placeholder="Ask a question about the data…"
         aria-describedby="question-hint"
-        className="max-h-40 min-h-12 flex-1 resize-none border-0 bg-transparent px-0 py-2 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
+        className="max-h-40 min-h-9 flex-1 resize-none border-0 bg-transparent px-0 py-1.5 text-base md:text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
       />
       <p id="question-hint" className="sr-only">
         I&apos;ll suggest a query. Nothing runs until you click Run.
       </p>
-      <Button type="submit" size="icon-lg" disabled={!canSubmit} aria-label="Suggest SQL" className="rounded-xl">
-        <ArrowUpIcon />
+      <Button type="submit" variant="ghost" size="icon-lg" disabled={!canSubmit} aria-label="Suggest SQL" className="rounded-xl">
+        <CornerDownLeftIcon />
       </Button>
     </form>
   );

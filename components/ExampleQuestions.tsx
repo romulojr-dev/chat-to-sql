@@ -25,7 +25,7 @@ export function ExampleQuestions({ onPick }: Props) {
               variant="outline"
               size="sm"
               onClick={() => onPick(q)}
-              className="h-auto rounded-full px-3.5 py-1.5 text-left whitespace-normal"
+              className="h-auto rounded-full px-3.5 py-1.5 text-left whitespace-normal dark:bg-background dark:hover:bg-muted"
             >
               {q}
             </Button>
