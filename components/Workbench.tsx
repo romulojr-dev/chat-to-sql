@@ -1,26 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { ChatView } from "@/components/ChatView";
+import type { RunState, SuggestState } from "@/components/chat-types";
 import { ExampleQuestions } from "@/components/ExampleQuestions";
 import { QuestionBox } from "@/components/QuestionBox";
-import { ResultsView } from "@/components/ResultsView";
-import { SqlPreview } from "@/components/SqlPreview";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { RunSuccess, SuggestSuccess } from "@/lib/api-types";
 import { postJson } from "@/lib/client/post-json";
-
-type SuggestState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "done"; explanation: string }
-  | { status: "error"; code: string; message: string };
-
-type RunState =
-  | { status: "idle" }
-  | { status: "loading" }
-  | { status: "done"; result: RunSuccess }
-  | { status: "error"; message: string };
 
 /** True once `active` has stayed true for `ms` (used for "this is taking a while" hints). */
 function useDelayedFlag(active: boolean, ms: number) {
@@ -39,37 +25,59 @@ function useDelayedFlag(active: boolean, ms: number) {
 // A suspended free-tier database takes a few seconds to wake on the first query.
 const SLOW_RUN_HINT_MS = 2500;
 
-export function Workbench() {
+/**
+ * Two views. Landing: a centered prompt box, examples, and the About section (`about`).
+ * Chat: one question and its answer; no reply box, and "Back to homepage" returns to the landing view.
+ */
+export function Workbench({ about }: { about: ReactNode }) {
   const [question, setQuestion] = useState("");
+  const [asked, setAsked] = useState<string | null>(null); // null = landing view
   const [sql, setSql] = useState("");
   const [suggest, setSuggest] = useState<SuggestState>({ status: "idle" });
   const [run, setRun] = useState<RunState>({ status: "idle" });
   const suggestCtrl = useRef<AbortController | null>(null);
   const runCtrl = useRef<AbortController | null>(null);
+  const promptRef = useRef<HTMLTextAreaElement>(null);
+  const focusPromptOnLanding = useRef(false);
   const slowRun = useDelayedFlag(run.status === "loading", SLOW_RUN_HINT_MS);
 
+  // After "Back to homepage", put the cursor back in the prompt box once it has rendered.
+  useEffect(() => {
+    if (asked === null && focusPromptOnLanding.current) {
+      focusPromptOnLanding.current = false;
+      promptRef.current?.focus();
+    }
+  }, [asked]);
+
   async function onSuggest(override?: string) {
-    const asked = override ?? question;
-    if (override !== undefined) setQuestion(override);
+    const text = override ?? question;
     suggestCtrl.current?.abort();
     runCtrl.current?.abort();
     const ctrl = new AbortController();
     suggestCtrl.current = ctrl;
+    setAsked(text);
     setSuggest({ status: "loading" });
-    setRun({ status: "idle" }); // a new question clears stale results
+    setRun({ status: "idle" });
     setSql("");
+    const started = performance.now();
 
     try {
-      const r = await postJson<SuggestSuccess>("/api/suggest", { question: asked }, ctrl.signal);
+      const r = await postJson<SuggestSuccess>("/api/suggest", { question: text }, ctrl.signal);
+      const ms = Math.round(performance.now() - started);
       if (r.ok) {
         setSql(r.data.sql);
-        setSuggest({ status: "done", explanation: r.data.explanation });
+        setSuggest({ status: "done", explanation: r.data.explanation, ms });
       } else {
-        setSuggest({ status: "error", code: r.code, message: r.message });
+        setSuggest({ status: "error", code: r.code, message: r.message, ms });
       }
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
-      setSuggest({ status: "error", code: "network", message: "Could not reach the server. Please try again." });
+      setSuggest({
+        status: "error",
+        code: "network",
+        message: "Could not reach the server. Please try again.",
+        ms: Math.round(performance.now() - started),
+      });
     }
   }
 
@@ -88,60 +96,43 @@ export function Workbench() {
     }
   }
 
+  /** Cancel anything in flight, so a late answer can't appear on the landing view, and start fresh. */
+  function onHome() {
+    suggestCtrl.current?.abort();
+    runCtrl.current?.abort();
+    focusPromptOnLanding.current = true;
+    setQuestion("");
+    setSql("");
+    setSuggest({ status: "idle" });
+    setRun({ status: "idle" });
+    setAsked(null);
+  }
+
   return (
-    <div className="space-y-8">
-      <QuestionBox question={question} onChange={setQuestion} onSubmit={() => onSuggest()} busy={suggest.status === "loading"} />
-      <ExampleQuestions onPick={(q) => onSuggest(q)} disabled={suggest.status === "loading"} />
-
-      <section aria-live="polite" aria-busy={suggest.status === "loading"} className="space-y-3">
-        {suggest.status === "loading" && (
-          <div className="space-y-2" role="status" aria-label="Writing a query">
-            <Skeleton className="h-5 w-40" />
-            <Skeleton className="h-28 w-full" />
-          </div>
-        )}
-        {suggest.status === "error" && (
-          <Alert variant={suggest.code === "cannot_answer" ? "default" : "destructive"}>
-            <AlertTitle>
-              {suggest.code === "cannot_answer" ? "I can't answer that from this data" : "I couldn't suggest a query"}
-            </AlertTitle>
-            <AlertDescription>{suggest.message}</AlertDescription>
-          </Alert>
-        )}
-      </section>
-
-      {suggest.status === "done" && (
+    <main className="flex flex-1 flex-col">
+      {asked === null || suggest.status === "idle" ? (
         <>
-          <SqlPreview
-            sql={sql}
-            explanation={suggest.explanation}
-            onChange={setSql}
-            onRun={onRun}
-            running={run.status === "loading"}
-          />
-
-          <section aria-live="polite" aria-busy={run.status === "loading"} className="space-y-3">
-            {run.status === "loading" && (
-              <div className="space-y-2" role="status" aria-label="Running query">
-                <Skeleton className="h-8 w-48" />
-                <Skeleton className="h-40 w-full" />
-                {slowRun && (
-                  <p className="text-muted-foreground text-sm">
-                    Waking up the database. The first query after a quiet period can take a few seconds.
-                  </p>
-                )}
-              </div>
-            )}
-            {run.status === "error" && (
-              <Alert variant="destructive">
-                <AlertTitle>That query could not run</AlertTitle>
-                <AlertDescription>{run.message}</AlertDescription>
-              </Alert>
-            )}
-            {run.status === "done" && <ResultsView result={run.result} />}
+          <section className="mx-auto flex min-h-[calc(100svh-3.1rem-12rem)] w-full max-w-3xl flex-col items-center justify-center gap-6 px-4 py-10">
+            <h2 className="text-center text-3xl font-semibold tracking-tight sm:text-4xl">
+              What do you want to analyze?
+            </h2>
+            <QuestionBox question={question} onChange={setQuestion} onSubmit={() => onSuggest()} inputRef={promptRef} />
+            <ExampleQuestions onPick={(q) => onSuggest(q)} />
           </section>
+          {about}
         </>
+      ) : (
+        <ChatView
+          question={asked}
+          suggest={suggest}
+          sql={sql}
+          onSqlChange={setSql}
+          onRun={onRun}
+          run={run}
+          slowRun={slowRun}
+          onHome={onHome}
+        />
       )}
-    </div>
+    </main>
   );
 }

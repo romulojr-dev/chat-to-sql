@@ -19,7 +19,7 @@ test.describe("question -> SQL -> Run -> results (model and database stubbed)", 
   test("an example question gives a suggestion, and nothing runs until Run is clicked", async ({ page }) => {
     const calls = await stubApi(page);
     await open(page);
-    await expect(page.getByRole("heading", { name: "chat-to-sql" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "SiyasatQL", exact: true })).toBeVisible();
 
     await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
 
@@ -60,18 +60,7 @@ test.describe("question -> SQL -> Run -> results (model and database stubbed)", 
     expect(calls.run).toEqual([{ sql: "SELECT count(*) AS n FROM orders" }]);
   });
 
-  test("a new question clears the previous results", async ({ page }) => {
-    await stubApi(page);
-    await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
-    await page.getByRole("button", { name: "Run query" }).click();
-    await expect(page.getByRole("tab", { name: "Chart" })).toBeVisible();
-
-    await question(page).fill("something else");
-    await page.getByRole("button", { name: "Suggest SQL" }).click();
-    await expect(sqlBox(page)).toHaveValue(SUGGESTION.sql);
-    await expect(page.getByRole("tab", { name: "Chart" })).toHaveCount(0);
-  });
+  // "A new question clears the previous results" now means going home first; see chat.spec.ts.
 
   test("a question the data cannot answer shows a calm message, not an error", async ({ page }) => {
     await stubApi(page, {
@@ -139,7 +128,12 @@ test.describe("keyboard only", () => {
     const calls = await stubApi(page);
     await open(page);
 
-    await page.keyboard.press("Tab"); // first stop on the page
+    // The header comes first: theme toggle, Email, GitHub, LinkedIn. The question box is the next stop.
+    for (const name of ["Toggle dark mode", "Email", "GitHub", "LinkedIn"]) {
+      await page.keyboard.press("Tab");
+      await expect(page.getByRole(name === "Toggle dark mode" ? "button" : "link", { name })).toBeFocused();
+    }
+    await page.keyboard.press("Tab");
     await expect(question(page)).toBeFocused();
     await page.keyboard.type("orders by status");
     await page.keyboard.press("Enter");
