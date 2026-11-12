@@ -5,9 +5,10 @@ A portfolio project: non-technical users ask questions in English, the app sugge
 Source of truth, in order: `docs/intent/chat-to-sql.md` (what and why), `SPEC.md` (how), `tasks/plan.md` (approach and risks), `tasks/todo.md` (progress). Read `tasks/todo.md` first and continue from the first unchecked task.
 
 ## Status
-- **T1 to T12 done and verified.** Live at https://chat-to-sql.vercel.app/ (Vercel auto-deploys from `main`; repo `romulojr-dev/chat-to-sql`).
-- **Next: Phase 6, the eval (T11 DONE: 60 questions in `evals/questions.ts`, 14 negatives in `evals/negatives.ts`, verify with `npm run eval:check`; T12 DONE: `npm run eval -- --label <name>` runs everything and writes evals/results/<name>.{json,md}; rules in evals/compare.ts; T13 baseline + improvement), then T14 (e2e + accessibility) and T15 (README + final checks).**
-- Eval rules (from SPEC.md): 30 to 100 questions with hand-written reference SQL, tiered easy/medium/hard, a held-out subset not used for prompt tuning, every reference SQL must pass the validator and run. Metrics: execution accuracy overall and by tier, valid-SQL rate, safety-block rate, p50/p95 latency, tokens and dollars per question, chart-choice accuracy. The baseline is the current prompt (no few-shot examples). Improvement levers to measure: column descriptions, few-shot examples, Haiku vs Sonnet, effort. Only claim numbers produced by the committed harness, and say "on our own N-question test set".
+- **T1 to T13 done and verified.** Live at https://chat-to-sql.vercel.app/ (Vercel auto-deploys from `main`; repo `romulojr-dev/chat-to-sql`).
+- **Eval is complete** (`docs/eval-results.md`): 60 questions in `evals/questions.ts` (30% held out), 14 safety prompts in `evals/negatives.ts`. Prompt v1 is frozen as the baseline (hash pinned in a test); v2 is the production default. Haiku 5.5 averaged 92.8% (v1) and 96.7% (v2) over 3 runs each; the gap is suggestive, not proven (ranges overlap). Never claim numbers beyond what `docs/eval-results.md` says.
+- **Next: T14 (Playwright smoke test + accessibility pass), then T15 (README with demo link, screenshots, architecture, safety design, eval results; final checks).**
+- Eval commands: `npm run eval:check` (verify references), `npm run eval -- --prompt v1|v2 --label <name>` (one run, about $0.03; calls the LLM), `npm run eval:summary -- v1 v2` (compare groups named `<prefix>-run1..n`).
 
 ## Commands
 `npm run dev | build | lint | typecheck | test` (Vitest; integration tests use the real Neon DB through `.env.local` and skip themselves without `DATABASE_URL`). `npm run db:seed` (reload dataset, idempotent), `npm run db:role` (recreate read-only role), `npm run limits:check` (Upstash smoke test). Before every commit: lint, typecheck, test, and build all pass.

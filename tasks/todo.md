@@ -100,14 +100,14 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: T7, T11
   - Files: `evals/run.ts`, `evals/compare.ts`, `tests/compare.test.ts`
 
-- [ ] **T13: Baseline, improve, re-measure** (M)
+- [x] **T13: Baseline, improve, re-measure** (M)
   - Acceptance: baseline report committed; one or more changes (e.g. column descriptions, few-shot examples, model comparison) with before and after numbers, tuned on non-holdout and reported on both
   - Verify: committed reports reproduce via `npm run eval`
   - Depends on: T12
   - Files: `evals/results/*`, `lib/schema/descriptions.ts`, `lib/llm/prompt.ts`
 
 ### Checkpoint 5: Eval
-- [ ] Baseline and improved numbers exist; human review of claims before putting them in the README
+- [x] Baseline and improved numbers exist; human review of claims before putting them in the README (write-up: docs/eval-results.md)
 
 ## Phase 7: Ship
 
