@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("../lib/llm/suggest", () => ({ suggestSql: vi.fn() }));
+vi.mock("../lib/llm/suggest", () => ({ suggestSql: vi.fn(), resolveModel: () => "claude-haiku-5-5" }));
+vi.mock("../lib/limits/guard", () => ({ guard: vi.fn() }));
 
 import { POST } from "../app/api/suggest/route";
+import { guard } from "../lib/limits/guard";
 import { suggestSql, type SuggestResult } from "../lib/llm/suggest";
 
 const post = (body: unknown) =>
@@ -17,7 +19,11 @@ const post = (body: unknown) =>
 const usage = { inputTokens: 1200, outputTokens: 80 };
 const reply = (r: SuggestResult) => vi.mocked(suggestSql).mockResolvedValueOnce(r);
 
+const settle = vi.fn(async () => {});
+
 beforeEach(() => {
+  settle.mockClear();
+  vi.mocked(guard).mockReset().mockResolvedValue({ ok: true, settle });
   vi.mocked(suggestSql).mockReset();
   vi.spyOn(console, "log").mockImplementation(() => {});
   vi.spyOn(console, "error").mockImplementation(() => {});
@@ -89,5 +95,60 @@ describe("POST /api/suggest: unusable model output", () => {
     const res = await post({ question: "q" });
     expect(res.status).toBe(500);
     expect(JSON.stringify(await res.json())).not.toContain("sk-ant-xyz");
+  });
+});
+
+describe("POST /api/suggest: cost protection", () => {
+  it("stops at the guard's response without calling the model", async () => {
+    vi.mocked(guard).mockResolvedValueOnce({
+      ok: false,
+      response: Response.json({ error: { code: "rate_limited", message: "Slow down." } }, { status: 429 }),
+    });
+    const res = await post({ question: "q" });
+    expect(res.status).toBe(429);
+    expect((await res.json()).error.code).toBe("rate_limited");
+    expect(suggestSql).not.toHaveBeenCalled();
+  });
+
+  it("asks the guard about the suggest scope and the model that will be used", async () => {
+    reply({ ok: true, sql: "SELECT 1", explanation: "x", model: "claude-haiku-5-5", usage });
+    await post({ question: "q" });
+    expect(guard).toHaveBeenCalledWith(expect.any(Request), "suggest", "claude-haiku-5-5");
+  });
+
+  it("settles with the real token usage after a successful call", async () => {
+    reply({ ok: true, sql: "SELECT 1", explanation: "x", model: "claude-haiku-5-5", usage });
+    await post({ question: "q" });
+    expect(settle).toHaveBeenCalledWith({ model: "claude-haiku-5-5", usage });
+  });
+
+  it("still charges the tokens when the model declines or its SQL is rejected", async () => {
+    reply({ ok: false, code: "cannot_answer", reason: "no", usage });
+    await post({ question: "q" });
+    expect(settle).toHaveBeenLastCalledWith({ model: "claude-haiku-5-5", usage });
+
+    reply({ ok: true, sql: "DELETE FROM orders", explanation: "x", model: "claude-haiku-5-5", usage });
+    await post({ question: "q" });
+    expect(settle).toHaveBeenLastCalledWith({ model: "claude-haiku-5-5", usage });
+  });
+
+  it("releases the whole reservation when the request never reached the model", async () => {
+    await post("{not json");
+    expect(settle).toHaveBeenLastCalledWith({ model: "claude-haiku-5-5" });
+    await post({});
+    expect(settle).toHaveBeenLastCalledWith({ model: "claude-haiku-5-5" });
+    expect(suggestSql).not.toHaveBeenCalled();
+  });
+
+  it("settles a failed API call with no usage (nothing was spent)", async () => {
+    reply({ ok: false, code: "unavailable", reason: "later" });
+    await post({ question: "q" });
+    expect(settle).toHaveBeenLastCalledWith({ model: "claude-haiku-5-5", usage: undefined });
+  });
+
+  it("keeps the reservation if suggestSql throws unexpectedly (over-counting is the safe side)", async () => {
+    vi.mocked(suggestSql).mockRejectedValueOnce(new Error("boom"));
+    await post({ question: "q" });
+    expect(settle).not.toHaveBeenCalled();
   });
 });

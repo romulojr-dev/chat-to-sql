@@ -82,6 +82,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
 - [ ] **T10: Rate limits + hard spend cap** (M)
   - Acceptance: per-IP limits on both routes; global daily LLM cap (token/dollar based) that returns 503 with a friendly message; input length caps; free KV store set up
   - Verify: tests for limit and cap logic; manual: exceed limit -> 429; cap reached -> 503
+  - Status: code done and verified locally (250 tests; 429 and fail-closed checked on the production build). Still open: create the Upstash store on Vercel, verify the Upstash adapter against it with `npm run limits:check`, and observe the 503 cap live. Do not add ANTHROPIC_API_KEY to Vercel until then.
   - Depends on: T8
   - Files: `lib/limits.ts`, `app/api/*/route.ts`, `tests/limits.test.ts`, `.env.example`
 

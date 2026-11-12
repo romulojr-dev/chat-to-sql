@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { guard } from "@/lib/limits/guard";
 import { selectChart } from "@/lib/chart/select";
 import { executeReadOnly, QueryError } from "@/lib/sql/execute";
 import { MAX_SQL_LENGTH, validateReadOnlySql } from "@/lib/sql/validate";
@@ -15,6 +16,9 @@ function error(status: number, code: string, message: string) {
 }
 
 export async function POST(request: Request) {
+  const limits = await guard(request, "run");
+  if (!limits.ok) return limits.response;
+
   let json: unknown;
   try {
     json = await request.json();

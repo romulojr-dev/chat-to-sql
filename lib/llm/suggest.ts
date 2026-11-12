@@ -41,6 +41,9 @@ export type SuggestResult =
       usage?: SuggestUsage;
     };
 
+/** The model a request will use: explicit option, then ANTHROPIC_MODEL, then the default. */
+export const resolveModel = (override?: string) => override ?? (process.env.ANTHROPIC_MODEL || DEFAULT_MODEL);
+
 let sharedClient: Anthropic | undefined;
 const getClient = () => (sharedClient ??= new Anthropic());
 
@@ -57,7 +60,7 @@ export async function suggestSql(question: string, options: SuggestOptions = {})
     };
   }
 
-  const model = options.model ?? (process.env.ANTHROPIC_MODEL || DEFAULT_MODEL);
+  const model = resolveModel(options.model);
 
   let response;
   try {

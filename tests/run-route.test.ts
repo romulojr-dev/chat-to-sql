@@ -5,7 +5,12 @@ vi.mock("../lib/sql/execute", async (importOriginal) => {
   return { ...actual, executeReadOnly: vi.fn(actual.executeReadOnly) };
 });
 
+vi.mock("../lib/limits/guard", () => ({
+  guard: vi.fn(async () => ({ ok: true, settle: async () => {} })),
+}));
+
 import { POST } from "../app/api/run/route";
+import { guard } from "../lib/limits/guard";
 import { executeReadOnly, QueryError } from "../lib/sql/execute";
 
 const post = (body: unknown) =>
@@ -96,4 +101,17 @@ describe.skipIf(!process.env.DATABASE_URL)("POST /api/run (integration, real DB)
     expect(body.chart).toMatchObject({ type: "bar", xLabel: "order_status", yLabel: "orders" });
     expect(body.chart.data[0]).toEqual({ x: "delivered", y: 96478 });
   }, 30_000);
+});
+
+describe("POST /api/run: rate limiting", () => {
+  it("returns the guard's response and never touches the database", async () => {
+    vi.mocked(guard).mockResolvedValueOnce({
+      ok: false,
+      response: Response.json({ error: { code: "rate_limited", message: "Slow down." } }, { status: 429 }),
+    });
+    const res = await post({ sql: "SELECT 1" });
+    expect(res.status).toBe(429);
+    expect(executeReadOnly).not.toHaveBeenCalled();
+    expect(guard).toHaveBeenLastCalledWith(expect.any(Request), "run");
+  });
 });

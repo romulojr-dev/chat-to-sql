@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { suggestSql } from "@/lib/llm/suggest";
+import { guard } from "@/lib/limits/guard";
+import { resolveModel, suggestSql } from "@/lib/llm/suggest";
 import { validateReadOnlySql } from "@/lib/sql/validate";
 
 /**
@@ -15,14 +16,21 @@ function error(status: number, code: string, message: string) {
 }
 
 export async function POST(request: Request) {
+  // Rate limit and reserve budget BEFORE doing anything that could cost money.
+  const model = resolveModel();
+  const limits = await guard(request, "suggest", model);
+  if (!limits.ok) return limits.response;
+
   let json: unknown;
   try {
     json = await request.json();
   } catch {
+    await limits.settle({ model }); // nothing was spent: release the reservation
     return error(400, "bad_request", "The request body must be valid JSON.");
   }
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) {
+    await limits.settle({ model });
     return error(400, "bad_request", 'Expected a JSON body like {"question": "..."}.');
   }
 
@@ -31,9 +39,13 @@ export async function POST(request: Request) {
   try {
     result = await suggestSql(parsed.data.question);
   } catch (e) {
+    // Unknown whether the call was billed: keep the reservation (over-counts, the safe direction).
     console.error("suggest.unexpected", e);
     return error(500, "internal", "Something went wrong. Please try again.");
   }
+
+  // Charge what the call really cost (a call that never reached the API has no usage and costs nothing).
+  await limits.settle({ model: result.ok ? result.model : model, usage: result.usage });
 
   if (!result.ok) {
     console.log(JSON.stringify({ event: "suggest.failed", code: result.code, ...result.usage }));
