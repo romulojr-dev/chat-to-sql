@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { HomeIcon } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { AgentTrace } from "@/components/AgentTrace";
@@ -41,11 +42,27 @@ export function ChatView({ question, suggest, sql, onSqlChange, onRun, run, slow
       </div>
 
       <div className="flex gap-3">
-        <div
-          aria-hidden="true"
-          className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold"
-        >
-          AI
+        {/* Pixel-art dino on a primary-colored circle. The dino is the inverse of the circle: white on black in light
+            mode, dark on light in dark mode. It follows the theme toggle (the "auto" file follows only the OS setting). */}
+        <div aria-hidden="true" className="bg-primary flex size-9 shrink-0 items-center justify-center rounded-full">
+          <Image
+            src="/dino/dino-dark.svg"
+            alt=""
+            width={20}
+            height={18}
+            unoptimized
+            className="h-[18px] w-5 dark:hidden"
+            style={{ imageRendering: "pixelated" }}
+          />
+          <Image
+            src="/dino/dino-light.svg"
+            alt=""
+            width={20}
+            height={18}
+            unoptimized
+            className="hidden h-[18px] w-5 dark:block"
+            style={{ imageRendering: "pixelated" }}
+          />
         </div>
 
         <div className="min-w-0 flex-1 space-y-4">
