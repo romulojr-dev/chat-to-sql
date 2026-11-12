@@ -18,20 +18,20 @@ A public web app where a non-technical user types a question in plain English, t
 
 ### Success criteria (testable)
 **Product**
-- [ ] A reviewer can complete steps 1 to 4 on the deployed URL with no login, in under 60 seconds from page load (warm database).
-- [ ] 100% of the safety test set (see Testing) is blocked: no write, DDL, multi-statement, or out-of-schema access succeeds.
-- [ ] Cold-start (idle Neon) shows a loading state and still completes without an error.
-- [ ] Page is usable on a mobile viewport and keyboard-navigable (labels, focus order, chart has a text/table alternative).
+- [x] A reviewer can complete steps 1 to 4 on the deployed URL with no login, in under 60 seconds from page load (warm database).
+- [x] 100% of the safety test set (see Testing) is blocked: no write, DDL, multi-statement, or out-of-schema access succeeds.
+- [x] Cold-start (idle Neon) shows a loading state and still completes without an error.
+- [x] Page is usable on a mobile viewport and keyboard-navigable (labels, focus order, chart has a text/table alternative).
 
 **Eval (reported in README)**
-- [ ] Eval suite of 30 to 100 questions with hand-written reference SQL, tiered easy / medium / hard.
-- [ ] One command runs the suite and writes a JSON report plus a Markdown summary.
-- [ ] Report includes: execution accuracy overall and by tier, valid-SQL rate, safety-block rate, latency p50/p95 (suggest and run separately), and tokens and dollars per query.
-- [ ] README shows at least one before and after comparison from a real prompt or model change (e.g. adding column descriptions, or Haiku vs Sonnet).
-- [ ] Targets are set after the first baseline run, not guessed now. No claim beyond "on our own N-question test set."
+- [x] Eval suite of 30 to 100 questions with hand-written reference SQL, tiered easy / medium / hard.
+- [x] One command runs the suite and writes a JSON report plus a Markdown summary.
+- [x] Report includes: execution accuracy overall and by tier, valid-SQL rate, safety-block rate, latency p50/p95 (suggest and run separately), and tokens and dollars per query.
+- [x] README shows at least one before and after comparison from a real prompt or model change (e.g. adding column descriptions, or Haiku vs Sonnet).
+- [x] Targets are set after the first baseline run, not guessed now. No claim beyond "on our own N-question test set."
 
 **Cost**
-- [ ] Hosting spend is $0. LLM spend is bounded by a hard cap (see Boundaries).
+- [x] Hosting spend is $0. LLM spend is bounded by a hard cap (see Boundaries).
 
 ## Tech Stack
 - Next.js (App Router) + TypeScript strict, React
@@ -176,3 +176,21 @@ FastAPI or separate backend; user-supplied databases; auto-run; write queries; a
 4. **Rate limiting storage:** needs a store (e.g. Vercel KV or Upstash free tier). Acceptable to add one free service, or keep in-memory best-effort limits (weaker on serverless)?
 5. ~~Chart library~~ Resolved: shadcn/ui `chart` (Recharts under the hood).
 6. **Chat vs single-shot:** v1 is single-question -> SQL (no multi-turn follow-ups like "now filter by 2018"). OK to defer conversation memory?
+
+## Verification log (2026-11-12)
+
+Evidence for each success criterion, checked against the deployed site and the repository.
+
+| Criterion | Evidence |
+|---|---|
+| Steps 1 to 4 in under 60 s, no login | Fresh browser, no cookies, on https://chat-to-sql.vercel.app/ with the real model: page load 5.4 s, first question suggest + run 8.3 s (cold database), second 5.8 s. |
+| Safety set 100% blocked | `tests/safety-set.json` (75 blocked queries) all pass; integration tests show writes fail at the database even with the validator bypassed; the eval's 14 adversarial prompts produced no unsafe SQL (13 declined, 1 harmless SELECT). |
+| Cold start shows a loading state and completes | First live query after idle took 4.4 s and completed. The loading state and the "Waking up the database" hint are covered by an e2e test with a deliberately slow response. The hint was not observed directly on the live site. |
+| Mobile and keyboard | 375 px screenshots and a live check show no horizontal overflow; keyboard-only e2e tests; axe-core reports zero WCAG 2.1 A/AA violations in five states; the chart carries a text alternative pointing to the table. |
+| Eval suite, one command, JSON + Markdown | 60 questions (`evals/questions.ts`); `npm run eval` writes `evals/results/<label>.json` and `.md`. |
+| Report contents | Accuracy overall, by tier and by split; valid-SQL rate; safety breakdown by layer; suggest and run latency p50/p95; dollars per question and total, with token totals (per-question tokens are in the JSON records). |
+| README before/after | README and `docs/eval-results.md`: prompt v1 vs v2 (92.8% vs 96.7%), Haiku vs Sonnet (96.7% vs 99.4%). |
+| Targets set after baseline; honest scope | No target was set in advance; every report and the README say "our own N-question test set". |
+| Hosting $0; LLM spend capped | No paid plans were set up (Vercel, Neon, Upstash free tiers; billing dashboards not inspected). Daily cap of $0.50 enforced in code; live counter moved by exactly the token-implied cost (283 and 379 micro-dollars) and by 1,410 for 4 calls in the final check. |
+
+Repository hygiene: a scan of all 26 commits found none of the actual secret values from `.env.local`, no `.env` files other than `.env.example`, and no raw dataset files.

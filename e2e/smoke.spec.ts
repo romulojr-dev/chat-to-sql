@@ -112,6 +112,28 @@ test.describe("question -> SQL -> Run -> results (model and database stubbed)", 
   });
 });
 
+test("a slow first query (suspended database) explains itself and still completes", async ({ page }) => {
+  // The first query after a quiet period can take ~4 s while the free-tier database wakes up.
+  await stubApi(page, {
+    run: async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 4_000));
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(RESULT) });
+    },
+  });
+  await open(page);
+  await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
+  await page.getByRole("button", { name: "Run query" }).click();
+
+  // While waiting: a loading state, and after ~2.5 s the explanation.
+  await expect(page.getByRole("status", { name: "Running query" })).toBeVisible();
+  await expect(page.getByText("Waking up the database")).toHaveCount(0);
+  await expect(page.getByText("Waking up the database")).toBeVisible({ timeout: 3_500 });
+
+  // Then the results arrive and the hint goes away.
+  await expect(page.getByRole("tab", { name: "Chart" })).toBeVisible({ timeout: 8_000 });
+  await expect(page.getByText("Waking up the database")).toHaveCount(0);
+});
+
 test.describe("keyboard only", () => {
   test("ask with Enter, then run with Ctrl+Enter, without touching the mouse", async ({ page }) => {
     const calls = await stubApi(page);

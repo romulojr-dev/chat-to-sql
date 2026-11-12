@@ -117,11 +117,11 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: T9
   - Files: `e2e/smoke.spec.ts`, `playwright.config.ts`
 
-- [ ] **T15: Deploy + README** (S)
+- [x] **T15: Deploy + README** (S)
   - Acceptance: Vercel deploy with env vars; live URL works from a fresh browser with no login; README has demo link, screenshots/GIF, architecture, safety design, eval results (with the honest "own test set" caveat), run instructions
   - Verify: open the live URL cold; run 3 questions; confirm caps are active in production
   - Depends on: T10, T13, T14
   - Files: `README.md`, `docs/`
 
 ### Checkpoint 6: Done
-- [ ] All SPEC success criteria checked; no secrets in git history; live demo verified
+- [x] All SPEC success criteria checked; no secrets in git history; live demo verified (SPEC.md verification log)

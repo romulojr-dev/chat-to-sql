@@ -5,9 +5,9 @@ A portfolio project: non-technical users ask questions in English, the app sugge
 Source of truth, in order: `docs/intent/chat-to-sql.md` (what and why), `SPEC.md` (how), `tasks/plan.md` (approach and risks), `tasks/todo.md` (progress). Read `tasks/todo.md` first and continue from the first unchecked task.
 
 ## Status
-- **T1 to T13 done and verified.** Live at https://chat-to-sql.vercel.app/ (Vercel auto-deploys from `main`; repo `romulojr-dev/chat-to-sql`).
+- **All tasks T1 to T15 done and verified.** Live at https://chat-to-sql.vercel.app/ (Vercel auto-deploys from `main`; repo `romulojr-dev/chat-to-sql`).
 - **Eval is complete** (`docs/eval-results.md`): 60 questions in `evals/questions.ts` (30% held out), 14 safety prompts in `evals/negatives.ts`. Prompt v1 is frozen as the baseline (hash pinned in a test); v2 is the production default. Haiku 5.5 averaged 92.8% (v1) and 96.7% (v2) over 3 runs each; the gap is suggestive, not proven (ranges overlap). Sonnet 5.5 with v2 averaged 99.4% but costs about 17x more, so Haiku 5.5 + v2 stays the production default. Never claim numbers beyond what `docs/eval-results.md` says.
-- **Next: T15 (README with demo link, screenshots, architecture, safety design, eval results; final checks).**
+- **The project is complete.** Remaining work is optional polish and the ideas listed under "Limitations and next steps" in README.md.
 - Eval commands: `npm run eval:check` (verify references), `npm run eval -- --prompt v1|v2 --label <name>` (one run, about $0.03; calls the LLM), `npm run eval:summary -- v1 v2` (compare groups named `<prefix>-run1..n`).
 - E2E: `npm run test:e2e` (Playwright on the production build, model and DB stubbed; builds first). `E2E_LIVE=1` also runs a test against the real DB; `E2E_SCREENSHOTS=1 npx playwright test e2e/screenshots.spec.ts` regenerates `docs/screenshots/` with real data. axe-core checks 5 page states against WCAG 2.1 A/AA with zero violations required.
 
