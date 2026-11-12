@@ -10,7 +10,7 @@
  *   npm run eval -- --label baseline
  *   npm run eval -- --split holdout --model claude-sonnet-5-5 --label sonnet-holdout
  *   npm run eval -- --ids e01,m02,h03 --no-negatives        (quick smoke run)
- * Flags: --model, --effort low|medium|high|xhigh|max, --split all|dev|holdout,
+ * Flags: --model, --prompt v1|v2 (default: current), --effort low|medium|high|xhigh|max, --split all|dev|holdout,
  *        --ids a,b,c, --limit N, --label name, --concurrency N (default 1: honest latency),
  *        --no-negatives
  */
@@ -20,7 +20,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { selectChart } from "../lib/chart/select";
 import { costMicroUsd } from "../lib/limits/cost";
-import { buildSystemPrompt } from "../lib/llm/prompt";
+import { buildSystemPrompt, CURRENT_PROMPT_VERSION, type PromptVersion } from "../lib/llm/prompt";
 import { resolveModel, suggestSql, type Effort } from "../lib/llm/suggest";
 import { executeReadOnly, QueryError } from "../lib/sql/execute";
 import { validateReadOnlySql } from "../lib/sql/validate";
@@ -69,6 +69,8 @@ async function main() {
 
   const model = resolveModel(typeof args.model === "string" ? args.model : undefined);
   const effort = typeof args.effort === "string" ? (args.effort as Effort) : undefined;
+  const promptVersion = (typeof args.prompt === "string" ? args.prompt : CURRENT_PROMPT_VERSION) as PromptVersion;
+  if (promptVersion !== "v1" && promptVersion !== "v2") throw new Error(`Unknown prompt version: ${promptVersion}`);
   const split = typeof args.split === "string" ? args.split : "all";
   const concurrency = typeof args.concurrency === "string" ? Number(args.concurrency) || 1 : 1;
 
@@ -82,8 +84,8 @@ async function main() {
   const runNegatives = args["no-negatives"] !== true;
 
   const date = new Date().toISOString().slice(0, 10);
-  const label = typeof args.label === "string" ? args.label : `${date}-${model}-${split}${effort ? `-${effort}` : ""}`;
-  console.log(`Eval "${label}": ${selected.length} questions${runNegatives ? ` + ${NEGATIVES.length} safety prompts` : ""} on ${model}${effort ? ` (effort ${effort})` : ""}`);
+  const label = typeof args.label === "string" ? args.label : `${date}-${model}-${promptVersion}-${split}${effort ? `-${effort}` : ""}`;
+  console.log(`Eval "${label}": ${selected.length} questions${runNegatives ? ` + ${NEGATIVES.length} safety prompts` : ""} on ${model}, prompt ${promptVersion}${effort ? ` (effort ${effort})` : ""}`);
 
   // 1. Ground truth: run every reference query once.
   const reference = new Map<string, Table>();
@@ -105,7 +107,7 @@ async function main() {
   const records = await pool(selected, concurrency, async (item, i): Promise<QuestionRecord> => {
     const base = { id: item.id, tier: item.tier, split: item.split, question: item.question, expectedChart: item.expectedChart };
     const started = performance.now();
-    const sug = await suggestSql(item.question, { model, effort });
+    const sug = await suggestSql(item.question, { model, effort, promptVersion });
     const suggestMs = Math.round(performance.now() - started);
     const usage = sug.usage ?? { inputTokens: 0, outputTokens: 0 };
     const common = {
@@ -147,7 +149,7 @@ async function main() {
   const negatives: NegativeRecord[] = [];
   if (runNegatives) {
     for (const item of NEGATIVES) {
-      const sug = await suggestSql(item.prompt, { model, effort });
+      const sug = await suggestSql(item.prompt, { model, effort, promptVersion });
       const usage = sug.usage;
       const cost = {
         inputTokens: usage?.inputTokens ?? 0,
@@ -177,14 +179,18 @@ async function main() {
     model,
     effort: effort ?? "model default",
     split: typeof args.ids === "string" ? `ids: ${args.ids}` : split,
+    // "+uncommitted" marks a run made from code that is not in the recorded commit, so it cannot be reproduced from it.
     gitCommit: (() => {
       try {
-        return execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+        const sh = (cmd: string) => execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
+        const dirty = sh("git status --porcelain -- lib evals app").length > 0;
+        return sh("git rev-parse --short HEAD") + (dirty ? "+uncommitted" : "");
       } catch {
         return "unknown";
       }
     })(),
-    promptSha: createHash("sha256").update(buildSystemPrompt()).digest("hex").slice(0, 12),
+    promptVersion,
+    promptSha: createHash("sha256").update(buildSystemPrompt(promptVersion)).digest("hex").slice(0, 12),
     questionCount: selected.length,
     negativeCount: negatives.length,
   };

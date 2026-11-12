@@ -9,6 +9,7 @@ const meta: ReportMeta = {
   effort: "model default",
   split: "all",
   gitCommit: "abc1234",
+  promptVersion: "v1",
   promptSha: "deadbeef0000",
   questionCount: 2,
   negativeCount: 1,

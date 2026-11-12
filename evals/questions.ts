@@ -8,6 +8,9 @@
  *  - "customers" = distinct customer_unique_id.
  *  - Categories are shown by English name (translation table, COALESCE to Portuguese).
  *
+ * Reference corrections made after the first baseline review (documented, not tuned to the model):
+ *  - m21: 9 reviews have a comment that is a single space; those are not "written comments".
+ *
  * `ordered` is true when the answer's row order matters (ranked top-N, time series).
  * `split: "holdout"` questions must NOT be used when tuning the prompt (T13).
  */
@@ -90,7 +93,7 @@ export const QUESTIONS: EvalQuestion[] = [
   q("m18", "medium", "What was the total revenue from delivered orders placed in 2017?", `SELECT sum(oi.price) FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.order_status = 'delivered' AND o.order_purchase_timestamp >= '2017-01-01' AND o.order_purchase_timestamp < '2018-01-01'`, "number"),
   q("m19", "medium", "What is the average shipping (freight) cost per order?", `SELECT sum(freight_value) / count(DISTINCT order_id) FROM order_items`, "number"),
   q("m20", "medium", "How many products have been sold exactly once?", `SELECT count(*) FROM (SELECT product_id FROM order_items GROUP BY product_id HAVING count(*) = 1) x`, "number"),
-  q("m21", "medium", "How many orders have a review with a written comment?", `SELECT count(DISTINCT order_id) FROM order_reviews WHERE review_comment_message IS NOT NULL`, "number"),
+  q("m21", "medium", "How many orders have a review with a written comment?", `SELECT count(DISTINCT order_id) FROM order_reviews WHERE review_comment_message IS NOT NULL AND trim(review_comment_message) <> ''`, "number"),
   q("m22", "medium", "How many sellers have sold more than 100 items?", `SELECT count(*) FROM (SELECT seller_id FROM order_items GROUP BY seller_id HAVING count(*) > 100) x`, "number"),
   q("m23", "medium", "Which 3 product categories contain the most products?", `SELECT ${CATEGORY} AS category, count(*) AS products FROM products p ${TRANSLATE} WHERE p.product_category_name IS NOT NULL GROUP BY 1 ORDER BY 2 DESC LIMIT 3`, "bar", true),
   q("m24", "medium", "How many delivered orders arrived in under 7 days after purchase?", `SELECT count(*) FROM orders WHERE order_status = 'delivered' AND order_delivered_customer_date - order_purchase_timestamp < interval '7 days'`, "number"),

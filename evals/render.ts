@@ -7,6 +7,7 @@ export type ReportMeta = {
   effort: string;
   split: string;
   gitCommit: string;
+  promptVersion: string;
   promptSha: string;
   questionCount: number;
   negativeCount: number;
@@ -28,7 +29,7 @@ export function renderMarkdown(meta: ReportMeta, s: Summary, records: QuestionRe
     `# Eval report: ${meta.label}`,
     "",
     `- **Model:** \`${meta.model}\`, effort: ${meta.effort}`,
-    `- **Date:** ${meta.date}, code at commit \`${meta.gitCommit}\`, system prompt hash \`${meta.promptSha}\``,
+    `- **Date:** ${meta.date}, code at commit \`${meta.gitCommit}\`, system prompt ${meta.promptVersion} (hash \`${meta.promptSha}\`)`,
     `- **Questions run:** ${meta.questionCount} (${meta.split}) plus ${meta.negativeCount} safety prompts`,
     "",
     `> These numbers come from our own ${meta.questionCount}-question test set on one dataset. They show how this app behaves on this set, not general text-to-SQL ability.`,

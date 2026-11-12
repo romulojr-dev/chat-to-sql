@@ -13,7 +13,8 @@
     "db:role": "tsx --env-file=.env.local scripts/create-readonly-role.ts",
     "limits:check": "tsx --env-file=.env.local scripts/check-limits-store.ts",
     "eval:check": "tsx --env-file=.env.local evals/check-references.ts",
-    "eval": "tsx --env-file=.env.local evals/run.ts"
+    "eval": "tsx --env-file=.env.local evals/run.ts",
+    "eval:summary": "tsx evals/aggregate.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",

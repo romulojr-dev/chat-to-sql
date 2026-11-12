@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { buildSystemPrompt, MAX_QUESTION_LENGTH } from "./prompt";
+import { buildSystemPrompt, MAX_QUESTION_LENGTH, type PromptVersion } from "./prompt";
 
 /**
  * Turns a plain-English question into suggested SQL with Claude. UI-free, so
@@ -28,6 +28,8 @@ export type SuggestOptions = {
   client?: Anthropic;
   model?: string;
   effort?: Effort;
+  /** Defaults to the current production prompt; the eval pins older versions. */
+  promptVersion?: PromptVersion;
 };
 
 export type SuggestUsage = { inputTokens: number; outputTokens: number };
@@ -67,7 +69,7 @@ export async function suggestSql(question: string, options: SuggestOptions = {})
     response = await (options.client ?? getClient()).messages.parse({
       model,
       max_tokens: MAX_OUTPUT_TOKENS,
-      system: buildSystemPrompt(),
+      system: buildSystemPrompt(options.promptVersion),
       messages: [{ role: "user", content: trimmed }],
       output_config: {
         format: zodOutputFormat(outputSchema),
