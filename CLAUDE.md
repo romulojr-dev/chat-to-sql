@@ -5,8 +5,8 @@ A portfolio project: non-technical users ask questions in English, the app sugge
 Source of truth, in order: `docs/intent/chat-to-sql.md` (what and why), `SPEC.md` (how), `tasks/plan.md` (approach and risks), `tasks/todo.md` (progress). Read `tasks/todo.md` first and continue from the first unchecked task.
 
 ## Status
-- **T1 to T10 done and verified.** Live at https://chat-to-sql.vercel.app/ (Vercel auto-deploys from `main`; repo `romulojr-dev/chat-to-sql`).
-- **Next: Phase 6, the eval (T11 questions, T12 harness, T13 baseline + improvement), then T14 (e2e + accessibility) and T15 (README + final checks).**
+- **T1 to T11 done and verified.** Live at https://chat-to-sql.vercel.app/ (Vercel auto-deploys from `main`; repo `romulojr-dev/chat-to-sql`).
+- **Next: Phase 6, the eval (T11 DONE: 60 questions in `evals/questions.ts`, 14 negatives in `evals/negatives.ts`, verify with `npm run eval:check`; T12 harness, T13 baseline + improvement), then T14 (e2e + accessibility) and T15 (README + final checks).**
 - Eval rules (from SPEC.md): 30 to 100 questions with hand-written reference SQL, tiered easy/medium/hard, a held-out subset not used for prompt tuning, every reference SQL must pass the validator and run. Metrics: execution accuracy overall and by tier, valid-SQL rate, safety-block rate, p50/p95 latency, tokens and dollars per question, chart-choice accuracy. The baseline is the current prompt (no few-shot examples). Improvement levers to measure: column descriptions, few-shot examples, Haiku vs Sonnet, effort. Only claim numbers produced by the committed harness, and say "on our own N-question test set".
 
 ## Commands

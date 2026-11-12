@@ -88,7 +88,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
 
 ## Phase 6: Eval
 
-- [ ] **T11: Eval question set** (M)
+- [x] **T11: Eval question set** (M)
   - Acceptance: 30-100 questions with hand-written reference SQL, tier (easy/medium/hard), expected chart type; a holdout subset marked; every reference SQL passes the validator and runs
   - Verify: script runs all reference SQL against the DB with no errors
   - Depends on: T2, T3
