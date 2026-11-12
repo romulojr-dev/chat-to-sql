@@ -34,7 +34,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Files: `lib/sql/execute.ts`, `tests/execute.integration.test.ts`
 
 ### Checkpoint 2: Safety core
-- [ ] All safety tests pass; writes provably fail at the DB layer; human review of validator rules
+- [x] All safety tests pass; writes provably fail at the DB layer; human review of validator rules
 
 ## Phase 3: First vertical slice (no LLM)
 
@@ -51,7 +51,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Files: `lib/chart/select.ts`, `components/ResultChart.tsx`, `tests/chart.test.ts`
 
 ### Checkpoint 3: First slice
-- [ ] Hardcoded SQL -> validated -> executed -> table + chart works locally; review with human before spending API money
+- [x] Hardcoded SQL -> validated -> executed -> table + chart works locally; review with human before spending API money
 
 ## Phase 4: LLM
 
@@ -75,7 +75,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Files: `components/ExampleQuestions.tsx`, `app/page.tsx`
 
 ### Checkpoint 4: Core flow
-- [ ] Full question -> SQL -> Run -> table/chart flow works with the real model; human review
+- [x] Full question -> SQL -> Run -> table/chart flow works with the real model; human review
 
 ## Phase 5: Protection
 
