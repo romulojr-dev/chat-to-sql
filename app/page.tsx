@@ -1,17 +1,13 @@
+import { AboutSection } from "@/components/AboutSection";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Workbench } from "@/components/Workbench";
 
 export default function Home() {
   return (
     <>
-    <SiteHeader />
-    <main className="mx-auto max-w-4xl space-y-8 p-4 sm:p-10">
-      <p className="text-muted-foreground">
-        Ask questions about a Brazilian e-commerce dataset in plain English. I suggest a read-only SQL query,
-        you review it, and you decide whether to run it.
-      </p>
-      <Workbench />
-      <footer className="text-muted-foreground border-t pt-4 text-xs">
+      <SiteHeader />
+      <Workbench about={<AboutSection />} />
+      <footer className="text-muted-foreground mx-auto w-full max-w-3xl border-t px-4 py-4 text-xs">
         <p>Suggested queries are AI-generated: review them before running.</p>
         <p>
           Data:{" "}
@@ -35,7 +31,6 @@ export default function Home() {
           . Not affiliated with Olist.
         </p>
       </footer>
-    </main>
     </>
   );
 }

@@ -9,24 +9,23 @@ export const EXAMPLE_QUESTIONS = [
   "What is the average review score for each customer state?",
 ];
 
-type Props = { onPick: (question: string) => void; disabled: boolean };
+type Props = { onPick: (question: string) => void };
 
-export function ExampleQuestions({ onPick, disabled }: Props) {
+export function ExampleQuestions({ onPick }: Props) {
   return (
-    <div className="space-y-2">
-      <p id="examples-label" className="text-muted-foreground text-sm">
+    <div>
+      <p id="examples-label" className="sr-only">
         Or try an example:
       </p>
-      <ul aria-labelledby="examples-label" className="flex flex-wrap gap-2">
+      <ul aria-labelledby="examples-label" className="flex flex-wrap justify-center gap-2">
         {EXAMPLE_QUESTIONS.map((q) => (
           <li key={q}>
             <Button
               type="button"
               variant="outline"
               size="sm"
-              disabled={disabled}
               onClick={() => onPick(q)}
-              className="h-auto whitespace-normal py-1.5 text-left"
+              className="h-auto rounded-full px-3.5 py-1.5 text-left whitespace-normal"
             >
               {q}
             </Button>

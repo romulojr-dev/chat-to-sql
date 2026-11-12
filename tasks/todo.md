@@ -138,9 +138,9 @@ Design approved from mockups: minimal landing (centered prompt box, examples, Ab
   - Acceptance: page title, metadata, header, README, e2e text say SiyasatQL
 - [x] **T18: Header** (S)
   - Acceptance: "SiyasatQL" text only; ghost buttons: theme toggle, divider, mail (romu.dev@outlook.com), GitHub (repo), LinkedIn (/in/romulo-dev/); all have accessible names
-- [ ] **T19: Landing view** (M)
+- [x] **T19: Landing view** (M)
   - Acceptance: heading "What do you want to analyze?", centered prompt box, examples under it, whitespace, About section visibly peeking at the fold on common screens
-- [ ] **T20: Chat view** (M)
+- [x] **T20: Chat view** (M)
   - Acceptance: question bubble, Trace showing only real steps (expanded by default), explanation, editable SQL, Run (never automatic), results; after Run: note that replies are not possible plus "Back to homepage"; going home aborts in-flight requests and clears state; no reply box
 - [ ] **T21: Tests, screenshots, docs** (S)
   - Acceptance: e2e and axe updated (both themes, 5+ states); screenshots regenerated; README and CLAUDE.md updated

@@ -1,6 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
-import { stubApi, SUGGESTION } from "./stubs";
+import { json, stubApi, SUGGESTION } from "./stubs";
 
 // WCAG 2.0 / 2.1 level A and AA rules.
 const TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
@@ -20,72 +20,99 @@ async function violations(page: Page) {
   }));
 }
 
-test.describe("automated WCAG checks (axe-core)", () => {
-  test("initial page", async ({ page }) => {
-    await stubApi(page);
-    await open(page);
-    expect(await violations(page)).toEqual([]);
-  });
+const THEMES = ["light", "dark"] as const;
+const EXAMPLE = "How many unique customers do we have?";
+const unsafe = (route: import("@playwright/test").Route) =>
+  json({ error: { code: "unsafe_sql", message: "The assistant suggested a query that isn't allowed." } }, 422)(route);
+const cannotAnswer = (route: import("@playwright/test").Route) =>
+  json({ error: { code: "cannot_answer", message: "That is not in this data." } }, 422)(route);
 
-  test("after a suggestion", async ({ page }) => {
-    await stubApi(page);
-    await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
-    await expect(page.getByLabel("SQL query")).toHaveValue(SUGGESTION.sql);
-    expect(await violations(page)).toEqual([]);
-  });
-
-  test("results as a chart", async ({ page }) => {
-    await stubApi(page);
-    await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
-    await page.getByRole("button", { name: "Run query" }).click();
-    await expect(page.getByRole("img", { name: /Bar chart/ })).toBeVisible();
-    expect(await violations(page)).toEqual([]);
-  });
-
-  test("results as a table", async ({ page }) => {
-    await stubApi(page);
-    await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
-    await page.getByRole("button", { name: "Run query" }).click();
-    await page.getByRole("tab", { name: "Table" }).click();
-    await expect(page.getByRole("table")).toBeVisible();
-    expect(await violations(page)).toEqual([]);
-  });
-
-  test("an error message", async ({ page }) => {
-    await stubApi(page, {
-      suggest: (route) =>
-        route.fulfill({
-          status: 422,
-          contentType: "application/json",
-          body: JSON.stringify({ error: { code: "cannot_answer", message: "That is not in this data." } }),
-        }),
+// With nothing saved the page follows the system setting, so emulating it exercises both themes.
+for (const theme of THEMES) {
+  test.describe(`automated WCAG checks (axe-core), ${theme} theme`, () => {
+    test.beforeEach(async ({ page }) => {
+      await page.emulateMedia({ colorScheme: theme });
     });
-    await open(page);
-    await page.getByLabel("Ask a question about the data").fill("weather?");
-    await page.getByRole("button", { name: "Suggest SQL" }).click();
-    await expect(page.locator('[data-slot="alert"]')).toBeVisible();
-    expect(await violations(page)).toEqual([]);
+
+    test("landing view", async ({ page }) => {
+      await stubApi(page);
+      await open(page);
+      expect(await violations(page)).toEqual([]);
+    });
+
+    test("while the agent is working (Trace running and pending)", async ({ page }) => {
+      await stubApi(page, {
+        suggest: async (route) => {
+          await new Promise((r) => setTimeout(r, 1500));
+          await json(SUGGESTION)(route);
+        },
+      });
+      await open(page);
+      await page.getByRole("button", { name: EXAMPLE }).click();
+      await expect(page.locator('[data-slot="trace-line"][data-status="pending"]')).toBeVisible();
+      expect(await violations(page)).toEqual([]);
+    });
+
+    test("after a suggestion", async ({ page }) => {
+      await stubApi(page);
+      await open(page);
+      await page.getByRole("button", { name: EXAMPLE }).click();
+      await expect(page.getByLabel("SQL query")).toHaveValue(SUGGESTION.sql);
+      expect(await violations(page)).toEqual([]);
+    });
+
+    test("results as a chart, with the no-replies note", async ({ page }) => {
+      await stubApi(page);
+      await open(page);
+      await page.getByRole("button", { name: EXAMPLE }).click();
+      await page.getByRole("button", { name: "Run query" }).click();
+      await expect(page.getByRole("img", { name: /Bar chart/ })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Back to homepage" })).toBeVisible();
+      expect(await violations(page)).toEqual([]);
+    });
+
+    test("results as a table", async ({ page }) => {
+      await stubApi(page);
+      await open(page);
+      await page.getByRole("button", { name: EXAMPLE }).click();
+      await page.getByRole("button", { name: "Run query" }).click();
+      await page.getByRole("tab", { name: "Table" }).click();
+      await expect(page.getByRole("table")).toBeVisible();
+      expect(await violations(page)).toEqual([]);
+    });
+
+    test("an error message with a failed Trace step", async ({ page }) => {
+      await stubApi(page, { suggest: cannotAnswer });
+      await open(page);
+      await page.getByLabel("Ask a question about the data").fill("weather?");
+      await page.getByRole("button", { name: "Suggest SQL" }).click();
+      await expect(page.locator('[data-slot="alert"]')).toBeVisible();
+      await expect(page.locator('[data-slot="trace-line"][data-status="error"]')).toBeVisible();
+      expect(await violations(page)).toEqual([]);
+    });
+
+    test("a blocked (unsafe) query", async ({ page }) => {
+      await stubApi(page, { suggest: unsafe });
+      await open(page);
+      await page.getByRole("button", { name: EXAMPLE }).click();
+      await expect(page.locator('[data-slot="trace-line"][data-status="error"]')).toBeVisible();
+      expect(await violations(page)).toEqual([]);
+    });
   });
-});
+}
 
 test.describe("keyboard and screen-reader structure", () => {
-  test("tab order follows the visual order: question, submit, examples, SQL, Run, then the results tabs", async ({ page }) => {
+  test("tab order follows the visual order in the chat view: SQL, Run, the results tabs, then Back to homepage", async ({ page }) => {
     await stubApi(page);
     await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
+    await page.getByRole("button", { name: EXAMPLE }).click();
     await page.getByRole("button", { name: "Run query" }).click();
     await expect(page.getByRole("tab", { name: "Chart" })).toBeVisible();
 
-    // Start at the question box with some text, then Tab through the page.
-    const box = page.getByLabel("Ask a question about the data");
-    await box.fill("orders by status");
-    await box.focus();
-
+    // Start in the SQL box, then Tab through the rest of the page.
+    await page.getByLabel("SQL query").focus();
     const names: string[] = [];
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < 6; i++) {
       names.push(
         await page.evaluate(() => {
           const el = document.activeElement as (HTMLElement & { labels?: NodeListOf<HTMLLabelElement> }) | null;
@@ -94,12 +121,11 @@ test.describe("keyboard and screen-reader structure", () => {
       );
       await page.keyboard.press("Tab");
     }
-    const at = (name: string | RegExp) =>
-      names.findIndex((n) => (typeof name === "string" ? n === name : name.test(n)));
+    const at = (name: string) => names.findIndex((n) => n === name);
 
-    expect(names[0]).toBe("Ask a question about the data");
+    expect(names[0]).toBe("SQL query");
     // "Table" is not a Tab stop: tabs use arrow keys (roving tabindex), checked below.
-    const order = [at("Ask a question about the data"), at("Suggest SQL"), at(/unique customers/), at("SQL query"), at("Run query"), at("Chart")];
+    const order = [at("SQL query"), at("Run query"), at("Chart"), at("Back to homepage")];
     expect(order.every((i) => i >= 0), `all stops reached: ${JSON.stringify(names)}`).toBe(true);
     expect(order, `focus order: ${JSON.stringify(names)}`).toEqual([...order].sort((x, y) => x - y));
     expect(at("Table"), "inactive tabs are reached with arrow keys, not Tab").toBe(-1);
@@ -108,7 +134,7 @@ test.describe("keyboard and screen-reader structure", () => {
   test("the results tabs work from the keyboard: arrows move focus, Enter selects (manual activation)", async ({ page }) => {
     await stubApi(page);
     await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
+    await page.getByRole("button", { name: EXAMPLE }).click();
     await page.getByRole("button", { name: "Run query" }).click();
 
     const chartTab = page.getByRole("tab", { name: "Chart" });
@@ -131,7 +157,7 @@ test.describe("keyboard and screen-reader structure", () => {
   test("every control has an accessible name, and the page has one h1", async ({ page }) => {
     await stubApi(page);
     await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
+    await page.getByRole("button", { name: EXAMPLE }).click();
     await page.getByRole("button", { name: "Run query" }).click();
     await expect(page.getByRole("img", { name: /Bar chart/ })).toBeVisible();
 
@@ -151,7 +177,7 @@ test.describe("keyboard and screen-reader structure", () => {
   test("the chart has a text alternative that points to the table", async ({ page }) => {
     await stubApi(page);
     await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
+    await page.getByRole("button", { name: EXAMPLE }).click();
     await page.getByRole("button", { name: "Run query" }).click();
 
     const chart = page.getByRole("img", { name: /Bar chart of orders by order_status, 3 points/ });
@@ -163,7 +189,7 @@ test.describe("keyboard and screen-reader structure", () => {
     await stubApi(page);
     await open(page);
     // Results and errors sit inside polite live regions.
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
+    await page.getByRole("button", { name: EXAMPLE }).click();
     await page.getByRole("button", { name: "Run query" }).click();
     await expect(page.locator('section[aria-live="polite"]').filter({ has: page.getByRole("tab") })).toHaveCount(1);
   });
@@ -177,10 +203,11 @@ test.describe("visual regressions that automated WCAG checks cannot see", () => 
     expect(family).toMatch(/geist/i);
   });
 
-  test("chart marks have at least 3:1 contrast against the background (WCAG 1.4.11)", async ({ page }) => {
+  for (const theme of THEMES) test(`chart marks have at least 3:1 contrast against the background (WCAG 1.4.11), ${theme} theme`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: theme });
     await stubApi(page);
     await open(page);
-    await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
+    await page.getByRole("button", { name: EXAMPLE }).click();
     await page.getByRole("button", { name: "Run query" }).click();
     await expect(page.locator(".recharts-bar-rectangle path").first()).toBeVisible();
 
