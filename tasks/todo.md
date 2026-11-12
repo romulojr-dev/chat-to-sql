@@ -111,7 +111,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
 
 ## Phase 7: Ship
 
-- [ ] **T14: E2E smoke test + accessibility pass** (S)
+- [x] **T14: E2E smoke test + accessibility pass** (S)
   - Acceptance: Playwright test (stubbed LLM): example question -> SQL -> Run -> table; labels, focus order, keyboard use verified; chart text alternative present
   - Verify: `npm run test:e2e`; manual keyboard-only run
   - Depends on: T9

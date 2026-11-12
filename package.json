@@ -14,7 +14,8 @@
     "limits:check": "tsx --env-file=.env.local scripts/check-limits-store.ts",
     "eval:check": "tsx --env-file=.env.local evals/check-references.ts",
     "eval": "tsx --env-file=.env.local evals/run.ts",
-    "eval:summary": "tsx evals/aggregate.ts"
+    "eval:summary": "tsx evals/aggregate.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.8.0",
@@ -35,6 +36,8 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.0",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19",

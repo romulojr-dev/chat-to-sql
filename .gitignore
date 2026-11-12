@@ -43,3 +43,7 @@ next-env.d.ts
 
 # local dataset downloads (license: CC BY-NC-SA, do not commit)
 /data/
+
+# playwright
+/test-results/
+/playwright-report/
