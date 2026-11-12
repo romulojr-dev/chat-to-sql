@@ -133,7 +133,7 @@ Design approved from mockups: minimal landing (centered prompt box, examples, Ab
 - [x] **T16: Trace component + dark mode foundation** (S)
   - Acceptance: shadcn `trace` installed; light/dark theme with saved choice that respects system setting, no flash on load; text, chart and focus contrast pass in both themes
   - Verify: lint, typecheck, test, build; axe in both themes
-  - Status: Trace installed; `lib/theme.ts` (unit-tested, including blocked storage), inline head script, `ThemeToggle`. The toggle is not mounted yet (T18), so the axe/contrast check in both themes and the no-flash check are done in T21 against the real page.
+  - Status: Trace installed; `lib/theme.ts` (unit-tested, including blocked storage), inline head script, `ThemeToggle`. The toggle is not mounted yet (T18), so the axe/contrast check in both themes and the no-flash check were done in T21 against the real page (both pass; see e2e/a11y.spec.ts and e2e/header.spec.ts).
 - [x] **T17: Rename to SiyasatQL** (XS)
   - Acceptance: page title, metadata, header, README, e2e text say SiyasatQL
 - [x] **T18: Header** (S)
@@ -142,5 +142,6 @@ Design approved from mockups: minimal landing (centered prompt box, examples, Ab
   - Acceptance: heading "What do you want to analyze?", centered prompt box, examples under it, whitespace, About section visibly peeking at the fold on common screens
 - [x] **T20: Chat view** (M)
   - Acceptance: question bubble, Trace showing only real steps (expanded by default), explanation, editable SQL, Run (never automatic), results; after Run: note that replies are not possible plus "Back to homepage"; going home aborts in-flight requests and clears state; no reply box
-- [ ] **T21: Tests, screenshots, docs** (S)
+- [x] **T21: Tests, screenshots, docs** (S)
   - Acceptance: e2e and axe updated (both themes, 5+ states); screenshots regenerated; README and CLAUDE.md updated
+  - Status: 53 e2e tests pass (3 opt-in skipped); axe runs 7 states x 2 themes with zero violations after fixing three real contrast failures (Trace pending/timing text, light destructive color). Screenshots regenerated with the real database. Not yet done: merge to `main` and deploy (asks first), and a human look at the live site.

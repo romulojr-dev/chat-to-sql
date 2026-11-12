@@ -10,6 +10,10 @@ Ask a question about a data set in plain English. The app suggests a read-only S
 |---|---|
 | ![Top product categories by revenue, shown as a bar chart on desktop](docs/screenshots/desktop-revenue-bar-chart.png) | ![Orders per month in 2017, shown as a line chart on a phone](docs/screenshots/phone-orders-line-chart.png) |
 
+*(The screenshots use the real database with the model stubbed, so the agent's step timer reads 0.0s; on the live site it shows the real time of the model call.)*
+
+The page opens on a minimal prompt box ("What do you want to analyze?") with a short description of the data below it. Sending a question switches to a one-question agent chat: the agent's steps (shown with the shadcn Trace component, only steps that really happen), the editable SQL, **Run**, then the results. There are no replies or follow-ups, so a "Back to homepage" button starts over. A dark mode toggle is in the header.
+
 It runs on a public e-commerce data set (about 100,000 orders from the [Olist Brazilian E-Commerce Public Dataset](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce)) and is built for people who cannot write SQL but want a feel for the data.
 
 ## What this project demonstrates
@@ -113,9 +117,9 @@ npm run dev                       # http://localhost:3000
 ### Tests and eval
 
 ```bash
-npm test                  # 367 unit and integration tests (some use the real database and skip without one)
-npm run test:e2e          # 21 Playwright tests on the production build, model and database stubbed,
-                          # including axe-core WCAG 2.1 A/AA checks in five page states
+npm test                  # 379 unit and integration tests (some use the real database and skip without one)
+npm run test:e2e          # 53 Playwright tests on the production build, model and database stubbed,
+                          # including axe-core WCAG 2.1 A/AA checks in seven page states, in light and dark
 npm run eval:check        # runs every reference query against the database
 npm run eval -- --label my-run                # one full eval run (about 74 model calls, about $0.03)
 npm run eval:summary -- v1 v2 sonnet-v2       # compare runs
