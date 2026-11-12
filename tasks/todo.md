@@ -94,7 +94,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: T2, T3
   - Files: `evals/questions.json`, `evals/check-references.ts`
 
-- [ ] **T12: Eval harness + report** (M)
+- [x] **T12: Eval harness + report** (M)
   - Acceptance: `npm run eval` imports `lib/llm`/`lib/sql` directly; computes execution accuracy (result-set comparison rules documented: ordering, rounding, column naming), valid-SQL rate, safety-block rate, p50/p95 latency, tokens and $ per query, chart-choice accuracy; writes JSON and Markdown to `evals/results/`
   - Verify: harness unit tests for result comparison; dry run on 5 questions
   - Depends on: T7, T11
