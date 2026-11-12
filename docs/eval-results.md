@@ -2,7 +2,7 @@
 
 How well does the assistant turn plain-English questions into correct SQL? This page reports a measured answer, how it was measured, and where it falls short. Raw reports for every run are in [`evals/results/`](../evals/results/), and the comparison is in [`evals/results/SUMMARY.md`](../evals/results/SUMMARY.md).
 
-> **Scope.** These numbers come from our own 60-question test set on one dataset (Olist e-commerce) with one model (`claude-haiku-5-5`). They describe how this app behaves on this set. They are not a general text-to-SQL benchmark.
+> **Scope.** These numbers come from our own 60-question test set on one dataset (Olist e-commerce), mainly with `claude-haiku-5-5` and, for the model comparison, `claude-sonnet-5-5`. They describe how this app behaves on this set. They are not a general text-to-SQL benchmark.
 
 ## What was measured
 
@@ -52,6 +52,33 @@ v1 is the original prompt, frozen (a test pins its hash). v2 adds five rules, ea
 4. Return only the columns the question asks for. This is what lifted chart choice from 88.9% to 98.3%: extra helper columns used to stop a chart from appearing.
 5. Cast to `numeric` before `ROUND(x, 2)`, which fixed a Postgres error on a median calculation.
 
+## Haiku versus Sonnet
+
+The same 60 questions, the same prompt (v2) and three runs per model, so only the model differs.
+
+| Measure | Haiku 5.5 | Sonnet 5.5 |
+|---|---|---|
+| **Execution accuracy** | **96.7%** (95.0-98.3) | **99.4%** (98.3-100.0) |
+| easy | 100.0% | 100.0% |
+| medium | 93.1% (91.7-95.8) | 98.6% (95.8-100.0) |
+| hard | 97.9% (93.8-100.0) | 100.0% |
+| development questions | 97.6% (95.1-100.0) | 100.0% |
+| held-out questions | 94.7% (94.7-94.7) | 98.2% (94.7-100.0) |
+| SQL valid and ran | 99.4% (98.3-100.0) | 100.0% |
+| Chart choice matched | 98.3% | 99.4% (98.3-100.0) |
+| Suggest latency p50 | 2.0 s | 2.1 s |
+| Suggest latency p95 (per run) | 4.0 to 4.3 s | 4.4 to 5.4 s |
+| Cost of a full 74-call run | $0.032 | $0.549 |
+| Cost per model call | about $0.0004 | about $0.0074 |
+
+Sonnet runs: 60/60 (held-out 19/19), 60/60 (19/19) and 59/60 (18/19). All were made on commit `7d82857`.
+
+- **Sonnet was more accurate:** 99.4% against 96.7%. The ranges touch at 98.3%, so with three runs this is a consistent edge, not a proven one. Its only miss in three runs was `m11`, the ambiguous payments question that Haiku v2 gets wrong every time.
+- **It costs about 17 times more** for about 2.7 more points of accuracy, with similar median latency and a slower tail.
+- **That cost matters for this demo.** With the $0.50 daily spend cap, Haiku allows roughly 1,200 questions a day and Sonnet roughly 70. **Haiku 5.5 with prompt v2 stays the production default.**
+- **Caveats.** Prompt v2 was written from Haiku's failures, so this comparison shows how Sonnet does on a prompt tuned for Haiku. I did not run Sonnet on v1, so I cannot say how much of its edge is the model alone. The sample is small, and the questions have a single author.
+- **Two Sonnet reports (runs 2 and 3) say `+uncommitted`** by mistake. The harness's check counted the previous run's result files as uncommitted code. No code changed between the runs, and the check is fixed.
+
 ## Reading these results honestly
 
 - **The model is noisy.** v1 alone ranged from 88.3% to 96.7% on identical code. My first single baseline run (53/60) happened to be v1's worst. Comparing against a single run would have exaggerated the improvement.
@@ -68,13 +95,14 @@ v1 is the original prompt, frozen (a test pins its hash). v2 adds five rules, ea
 npm run eval:check                                # verifies all 60 reference queries against the database
 npm run eval -- --prompt v1 --label v1-run1       # one full run (about 74 model calls, about $0.03)
 npm run eval -- --prompt v2 --label v2-run1
-npm run eval:summary -- v1 v2                     # compare groups named <prefix>-run1, -run2, ...
+npm run eval -- --model claude-sonnet-5-5 --prompt v2 --label sonnet-v2-run1   # about $0.55 per run
+npm run eval:summary -- v1 v2 sonnet-v2           # compare groups named <prefix>-run1, -run2, ...
 ```
 
 The six runs above were made from the working tree one step before commit `b8b9a8f`, which contains exactly that code (their reports show an older hash because the code was not yet committed; the harness now marks such runs `+uncommitted`). Use `b8b9a8f` or later to reproduce. Expect run-to-run noise of a few questions.
 
 ## Not done
 
-- No comparison with a larger model (for example Sonnet). It would cost roughly 15 to 20 times more per run than Haiku.
+- Sonnet was not run on the original prompt (v1), and no other models or effort levels were compared.
 - No few-shot examples or self-repair retry on SQL errors; both are plausible next steps.
 - A single dataset and a single question author: the questions reflect what I think a teammate would ask.
