@@ -136,7 +136,7 @@ Design approved from mockups: minimal landing (centered prompt box, examples, Ab
   - Status: Trace installed; `lib/theme.ts` (unit-tested, including blocked storage), inline head script, `ThemeToggle`. The toggle is not mounted yet (T18), so the axe/contrast check in both themes and the no-flash check are done in T21 against the real page.
 - [x] **T17: Rename to SiyasatQL** (XS)
   - Acceptance: page title, metadata, header, README, e2e text say SiyasatQL
-- [ ] **T18: Header** (S)
+- [x] **T18: Header** (S)
   - Acceptance: "SiyasatQL" text only; ghost buttons: theme toggle, divider, mail (romu.dev@outlook.com), GitHub (repo), LinkedIn (/in/romulo-dev/); all have accessible names
 - [ ] **T19: Landing view** (M)
   - Acceptance: heading "What do you want to analyze?", centered prompt box, examples under it, whitespace, About section visibly peeking at the fold on common screens

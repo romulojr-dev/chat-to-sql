@@ -139,7 +139,12 @@ test.describe("keyboard only", () => {
     const calls = await stubApi(page);
     await open(page);
 
-    await page.keyboard.press("Tab"); // first stop on the page
+    // The header comes first: theme toggle, Email, GitHub, LinkedIn. The question box is the next stop.
+    for (const name of ["Toggle dark mode", "Email", "GitHub", "LinkedIn"]) {
+      await page.keyboard.press("Tab");
+      await expect(page.getByRole(name === "Toggle dark mode" ? "button" : "link", { name })).toBeFocused();
+    }
+    await page.keyboard.press("Tab");
     await expect(question(page)).toBeFocused();
     await page.keyboard.type("orders by status");
     await page.keyboard.press("Enter");
