@@ -61,7 +61,7 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: T1
   - Files: `lib/llm/prompt.ts`, `lib/llm/suggest.ts`, `lib/schema/descriptions.ts`, `tests/llm.test.ts`
 
-- [ ] **T8: `/api/suggest` + end-to-end UI flow** (M)
+- [x] **T8: `/api/suggest` + end-to-end UI flow** (M)
   - Acceptance: question -> suggested SQL (validated server side before returning, 422 otherwise) + explanation shown; **Run is never automatic**; user can edit the SQL before running
   - Verify: route tests with mocked LLM; manual with real key on 5 questions
   - Depends on: T6, T7
