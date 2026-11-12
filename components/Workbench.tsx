@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ExampleQuestions } from "@/components/ExampleQuestions";
 import { QuestionBox } from "@/components/QuestionBox";
 import { ResultsView } from "@/components/ResultsView";
 import { SqlPreview } from "@/components/SqlPreview";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ApiError, RunSuccess, SuggestSuccess } from "@/lib/api-types";
+import type { RunSuccess, SuggestSuccess } from "@/lib/api-types";
+import { postJson } from "@/lib/client/post-json";
 
 type SuggestState =
   | { status: "idle" }
@@ -20,23 +22,22 @@ type RunState =
   | { status: "done"; result: RunSuccess }
   | { status: "error"; message: string };
 
-/** POST JSON and return either the parsed success body or the API's error. */
-async function postJson<T>(
-  url: string,
-  body: unknown,
-  signal: AbortSignal,
-): Promise<{ ok: true; data: T } | { ok: false; code: string; message: string }> {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
-  const json = (await res.json().catch(() => null)) as T | ApiError | null;
-  if (res.ok && json && !("error" in (json as object))) return { ok: true, data: json as T };
-  const err = (json as ApiError | null)?.error;
-  return { ok: false, code: err?.code ?? "unknown", message: err?.message ?? "Something went wrong. Please try again." };
+/** True once `active` has stayed true for `ms` (used for "this is taking a while" hints). */
+function useDelayedFlag(active: boolean, ms: number) {
+  const [flag, setFlag] = useState(false);
+  useEffect(() => {
+    if (!active) return;
+    const t = setTimeout(() => setFlag(true), ms);
+    return () => {
+      clearTimeout(t);
+      setFlag(false);
+    };
+  }, [active, ms]);
+  return active && flag;
 }
+
+// A suspended free-tier database takes a few seconds to wake on the first query.
+const SLOW_RUN_HINT_MS = 2500;
 
 export function Workbench() {
   const [question, setQuestion] = useState("");
@@ -45,8 +46,11 @@ export function Workbench() {
   const [run, setRun] = useState<RunState>({ status: "idle" });
   const suggestCtrl = useRef<AbortController | null>(null);
   const runCtrl = useRef<AbortController | null>(null);
+  const slowRun = useDelayedFlag(run.status === "loading", SLOW_RUN_HINT_MS);
 
-  async function onSuggest() {
+  async function onSuggest(override?: string) {
+    const asked = override ?? question;
+    if (override !== undefined) setQuestion(override);
     suggestCtrl.current?.abort();
     runCtrl.current?.abort();
     const ctrl = new AbortController();
@@ -56,7 +60,7 @@ export function Workbench() {
     setSql("");
 
     try {
-      const r = await postJson<SuggestSuccess>("/api/suggest", { question }, ctrl.signal);
+      const r = await postJson<SuggestSuccess>("/api/suggest", { question: asked }, ctrl.signal);
       if (r.ok) {
         setSql(r.data.sql);
         setSuggest({ status: "done", explanation: r.data.explanation });
@@ -86,7 +90,8 @@ export function Workbench() {
 
   return (
     <div className="space-y-8">
-      <QuestionBox question={question} onChange={setQuestion} onSubmit={onSuggest} busy={suggest.status === "loading"} />
+      <QuestionBox question={question} onChange={setQuestion} onSubmit={() => onSuggest()} busy={suggest.status === "loading"} />
+      <ExampleQuestions onPick={(q) => onSuggest(q)} disabled={suggest.status === "loading"} />
 
       <section aria-live="polite" aria-busy={suggest.status === "loading"} className="space-y-3">
         {suggest.status === "loading" && (
@@ -120,6 +125,11 @@ export function Workbench() {
               <div className="space-y-2" role="status" aria-label="Running query">
                 <Skeleton className="h-8 w-48" />
                 <Skeleton className="h-40 w-full" />
+                {slowRun && (
+                  <p className="text-muted-foreground text-sm">
+                    Waking up the database. The first query after a quiet period can take a few seconds.
+                  </p>
+                )}
               </div>
             )}
             {run.status === "error" && (

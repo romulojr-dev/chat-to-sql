@@ -37,7 +37,7 @@ export function SqlPreview({ sql, explanation, onChange, onRun, running }: Props
         className="font-mono text-sm"
         aria-describedby="sql-hint"
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button onClick={onRun} disabled={running || !sql.trim()}>
           {running ? "Running…" : "Run query"}
         </Button>

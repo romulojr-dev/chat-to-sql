@@ -39,7 +39,7 @@ export function QuestionBox({ question, onChange, onSubmit, busy }: Props) {
         placeholder="e.g. Which product categories earned the most revenue in 2017?"
         aria-describedby="question-hint"
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={!canSubmit}>
           {busy ? "Thinking…" : "Suggest SQL"}
         </Button>

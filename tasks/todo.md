@@ -67,9 +67,10 @@ Order follows dependencies. Size: XS/S/M. Each task leaves the app working.
   - Depends on: T6, T7
   - Files: `app/api/suggest/route.ts`, `components/QuestionBox.tsx`, `app/page.tsx`
 
-- [ ] **T9: UX polish for reviewers** (S)
+- [x] **T9: UX polish for reviewers** (S)
   - Acceptance: 4-6 example question chips; cold-start loading state; friendly errors for 422/429/503; mobile layout works
   - Verify: manual on mobile viewport and with the DB suspended
+  - Status: code, error mapping (unit-tested), chips and footer verified on the production build; the phone-width look and the cold-start hint still need a human eyeball (carried to Checkpoint 4/T14).
   - Depends on: T8
   - Files: `components/ExampleQuestions.tsx`, `app/page.tsx`
 
