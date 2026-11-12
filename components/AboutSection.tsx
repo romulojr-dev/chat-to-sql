@@ -10,7 +10,7 @@ const STATS = [
 /** Shown under the prompt box on the landing view; its top edge peeks in at the fold. */
 export function AboutSection() {
   return (
-    <section aria-labelledby="about-heading" className="bg-muted/30 border-t px-4 pt-9 pb-16">
+    <section aria-labelledby="about-heading" className="px-4 pt-9 pb-16">
       <div className="mx-auto w-full max-w-3xl space-y-4">
         <h2 id="about-heading" className="text-xl font-semibold tracking-tight">
           About SiyasatQL
@@ -46,6 +46,47 @@ export function AboutSection() {
         <p className="text-muted-foreground max-w-2xl text-xs leading-relaxed">
           Covers September 2016 to October 2018 (fullest from January 2017 to August 2018). Money is in Brazilian reais
           (BRL). Each question stands alone: SiyasatQL doesn&apos;t remember earlier ones.
+        </p>
+
+        <h3 className="pt-4 text-base font-semibold tracking-tight">How accurate is it?</h3>
+        <p className="max-w-2xl leading-relaxed">
+          It was tested on 60 questions with known answers, from simple counts to multi-step ones. Over three runs, the
+          setup used here (Claude Haiku 5.5) returned the correct result <strong>96.7%</strong> of the time on average
+          (95.0% to 98.3%). It got every easy question right; medium questions were its weakest tier at 93.1%.
+        </p>
+        <p className="max-w-2xl leading-relaxed">
+          It was also tried with 14 unsafe prompts, such as requests to change data or hide commands inside a question.
+          None produced SQL that would change anything, and the database refuses writes on its own anyway.
+        </p>
+        <p className="text-muted-foreground max-w-2xl text-sm leading-relaxed">
+          These numbers describe this 60-question set on this dataset, not text-to-SQL in general, and the model varies
+          from run to run, so an occasional wrong answer is expected. Always read the SQL before you run it.{" "}
+          <a
+            className="text-foreground underline underline-offset-2"
+            href="https://github.com/romulojr-dev/chat-to-sql/blob/main/docs/eval-results.md"
+            target="_blank"
+            rel="noreferrer"
+          >
+            Full evaluation details
+          </a>
+          .
+        </p>
+
+        <p className="max-w-2xl leading-relaxed">
+          SiyasatQL was built by <strong>Romulo Ramos Jr.</strong> To get in touch, email{" "}
+          <a className="underline underline-offset-2" href="mailto:romu.dev@outlook.com">
+            romu.dev@outlook.com
+          </a>{" "}
+          or send a message on{" "}
+          <a
+            className="underline underline-offset-2"
+            href="https://www.linkedin.com/in/romulo-dev/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            LinkedIn
+          </a>
+          .
         </p>
       </div>
     </section>
