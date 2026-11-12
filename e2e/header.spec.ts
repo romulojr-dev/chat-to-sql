@@ -57,13 +57,15 @@ test.describe("header", () => {
     expect(await isDark(page)).toBe(false);
 
     await page.getByRole("button", { name: "Toggle dark mode" }).click();
-    expect(await isDark(page)).toBe(true);
+    // The switch runs inside a view transition, so the class lands a frame after the click.
+    await expect.poll(() => isDark(page)).toBe(true);
 
     await page.reload();
     await page.waitForLoadState("networkidle");
     expect(await isDark(page)).toBe(true);
 
     await page.getByRole("button", { name: "Toggle dark mode" }).click();
+    await expect.poll(() => isDark(page)).toBe(false);
     await page.reload();
     await page.waitForLoadState("networkidle");
     expect(await isDark(page)).toBe(false);
