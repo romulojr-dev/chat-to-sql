@@ -1,4 +1,6 @@
-# chat-to-sql
+# SiyasatQL
+
+(The repository and the live URL keep their original name, `chat-to-sql`.)
 
 Ask a question about a data set in plain English. The app suggests a read-only SQL query, you review it, and **you decide whether to run it**. Results appear as a table, plus a chart when one fits.
 

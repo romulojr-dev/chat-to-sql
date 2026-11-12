@@ -19,7 +19,7 @@ test.describe("question -> SQL -> Run -> results (model and database stubbed)", 
   test("an example question gives a suggestion, and nothing runs until Run is clicked", async ({ page }) => {
     const calls = await stubApi(page);
     await open(page);
-    await expect(page.getByRole("heading", { name: "chat-to-sql" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "SiyasatQL" })).toBeVisible();
 
     await page.getByRole("button", { name: "How many unique customers do we have?" }).click();
 

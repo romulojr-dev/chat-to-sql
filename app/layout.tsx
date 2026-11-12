@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "chat-to-sql",
+  title: "SiyasatQL",
   description: "Ask questions in plain English, get suggested read-only SQL.",
 };
 
