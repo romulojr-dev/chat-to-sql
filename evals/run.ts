@@ -183,7 +183,9 @@ async function main() {
     gitCommit: (() => {
       try {
         const sh = (cmd: string) => execSync(cmd, { stdio: ["ignore", "pipe", "ignore"] }).toString().trim();
-        const dirty = sh("git status --porcelain -- lib evals app").length > 0;
+        // Result files written by earlier runs must not make later runs look "uncommitted".
+        // Double quotes on purpose: execSync uses cmd.exe on Windows, which ignores single quotes.
+        const dirty = sh('git status --porcelain -- lib evals app ":(exclude)evals/results"').length > 0;
         return sh("git rev-parse --short HEAD") + (dirty ? "+uncommitted" : "");
       } catch {
         return "unknown";
