@@ -39,7 +39,10 @@ export async function POST(request: Request) {
   try {
     result = await suggestSql(parsed.data.question);
   } catch (e) {
-    // Unknown whether the call was billed: keep the reservation (over-counts, the safe direction).
+    // suggestSql turns every API failure into a typed result, so a throw means a bug or a
+    // misconfiguration (e.g. no API key) before any billable call. Release the reservation,
+    // otherwise every failing request would leak budget. The Anthropic console limit is the backstop.
+    await limits.settle({ model });
     console.error("suggest.unexpected", e);
     return error(500, "internal", "Something went wrong. Please try again.");
   }

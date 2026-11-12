@@ -146,9 +146,12 @@ describe("POST /api/suggest: cost protection", () => {
     expect(settle).toHaveBeenLastCalledWith({ model: "claude-haiku-5-5", usage: undefined });
   });
 
-  it("keeps the reservation if suggestSql throws unexpectedly (over-counting is the safe side)", async () => {
-    vi.mocked(suggestSql).mockRejectedValueOnce(new Error("boom"));
-    await post({ question: "q" });
-    expect(settle).not.toHaveBeenCalled();
+  it("releases the reservation if suggestSql throws before any billable call (e.g. a missing API key)", async () => {
+    // Keeping it would let a misconfiguration leak budget on every request.
+    vi.mocked(suggestSql).mockRejectedValueOnce(new Error("Could not resolve authentication method"));
+    const res = await post({ question: "q" });
+    expect(res.status).toBe(500);
+    expect(settle).toHaveBeenCalledTimes(1);
+    expect(settle).toHaveBeenLastCalledWith({ model: "claude-haiku-5-5" });
   });
 });
