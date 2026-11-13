@@ -10,8 +10,8 @@ const STATS = [
 /** Shown under the prompt box on the landing view; its top edge peeks in at the fold. */
 export function AboutSection() {
   return (
-    <section aria-labelledby="about-heading" className="px-4 pt-9 pb-16">
-      <div className="mx-auto w-full max-w-3xl space-y-4">
+    <section aria-labelledby="about-heading" className="pt-9 pb-16">
+      <div className="mx-auto w-full max-w-3xl space-y-4 px-4">
         <h2 id="about-heading" className="text-xl font-semibold tracking-tight">
           About SiyasatQL
         </h2>

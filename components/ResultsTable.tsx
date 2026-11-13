@@ -25,7 +25,7 @@ export function ResultsTable({ result }: { result: RunSuccess }) {
         <p className="text-muted-foreground text-sm">The query ran but returned no rows.</p>
       ) : (
         <div className="max-h-[28rem] overflow-auto rounded-md border">
-          <Table>
+          <Table containerClassName="scroll-shadow-x">
             <TableHeader className="bg-background sticky top-0">
               <TableRow>
                 {result.columns.map((c, i) => (
