@@ -162,3 +162,22 @@ test("the longest identifier in a typical query fits on one line of the SQL box 
   });
   expect(fits.w, `identifier is ${fits.w}px but a line is ${fits.inner}px`).toBeLessThanOrEqual(fits.inner);
 });
+
+test("example chips that wrap onto two lines are center aligned on a phone", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto("/");
+  await page.waitForLoadState("networkidle");
+  const chips = page.locator("section button").filter({ hasText: "?" });
+  const n = await chips.count();
+  expect(n).toBeGreaterThan(0);
+  let wrapped = 0;
+  for (let i = 0; i < n; i++) {
+    const { align, lines } = await chips.nth(i).evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { align: cs.textAlign, lines: Math.round(el.getBoundingClientRect().height / parseFloat(cs.lineHeight)) };
+    });
+    expect(align, `chip ${i}`).toBe("center");
+    if (lines >= 2) wrapped++;
+  }
+  expect(wrapped, "at least one chip should wrap at 320px, or this test checks nothing").toBeGreaterThan(0);
+});
