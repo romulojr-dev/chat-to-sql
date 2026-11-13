@@ -74,6 +74,25 @@ test.describe("bar chart with many long labels", () => {
     });
   }
 
+  for (const [width, bar] of [[320, 4], [320, 19], [1440, 0], [1440, 19]] as const) {
+    test(`hover tooltip shows the full name and value inside the card (${width}px, bar ${bar + 1})`, async ({ page }) => {
+      await openResults(page, width);
+      const rect = page.locator(".recharts-bar-rectangle").nth(bar);
+      const rb = (await rect.boundingBox())!;
+      await page.mouse.move(rb.x + rb.width / 2, rb.y + rb.height / 2);
+      const tip = page.locator(".recharts-tooltip-wrapper");
+      await page.waitForTimeout(1000); // the tooltip slides into place; measure once it has settled
+      await expect(tip).toContainText(`health_beauty_and_personal_care_${bar}`);
+      await expect(tip).toContainText("total_revenue_brl");
+      await expect(tip).toContainText((100000 - bar * 1234).toLocaleString());
+      const card = (await page.locator('[data-slot="card"]').filter({ has: page.locator(".recharts-wrapper") }).boundingBox())!;
+      const content = (await tip.locator("> *").first().boundingBox())!;
+      expect(content.x, "tooltip clipped on the left").toBeGreaterThanOrEqual(card.x);
+      expect(content.x + content.width, "tooltip clipped on the right").toBeLessThanOrEqual(card.x + card.width + 0.5);
+      expect(content.x + content.width, "tooltip outside the viewport").toBeLessThanOrEqual(width);
+    });
+  }
+
   test("the full category name is still available (accessible chart description and Table tab)", async ({ page }) => {
     await openResults(page, 320);
     await page.getByRole("tab", { name: "Table" }).click();

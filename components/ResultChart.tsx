@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -8,7 +9,19 @@ import type { ChartSpec } from "@/lib/chart/select";
 const compact = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
 const truncate = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1)}…` : s);
 
+// Recharts doesn't keep the tooltip inside a chart that is narrower than its anchor point, so on
+// phones it is pinned to the chart's left edge (the tooltip is capped to fit the width).
+const PHONE = "(max-width: 639px)";
+const subscribePhone = (cb: () => void) => {
+  const mq = window.matchMedia(PHONE);
+  mq.addEventListener("change", cb);
+  return () => mq.removeEventListener("change", cb);
+};
+const useIsPhone = () =>
+  useSyncExternalStore(subscribePhone, () => window.matchMedia(PHONE).matches, () => false);
+
 export function ResultChart({ spec }: { spec: ChartSpec }) {
+  const phone = useIsPhone();
   if (spec.type === "number") {
     return (
       <Card className="max-w-sm">
@@ -48,10 +61,10 @@ export function ResultChart({ spec }: { spec: ChartSpec }) {
                   type="number"
                   tickLine={false}
                   axisLine={false}
-                  tickCount={4}
+                  tickCount={3}
                   tickFormatter={(v: number) => compact.format(v)}
                 />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip position={phone ? { x: 0 } : undefined} content={<ChartTooltipContent className="max-w-56" labelClassName="break-all" />} />
                 <Bar dataKey="y" fill="var(--color-y)" radius={4} />
               </BarChart>
             ) : spec.type === "bar" ? (
@@ -59,7 +72,7 @@ export function ResultChart({ spec }: { spec: ChartSpec }) {
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="x" tickLine={false} axisLine={false} interval={0} height={30} />
                 <YAxis tickLine={false} axisLine={false} width={64} tickFormatter={(v: number) => v.toLocaleString()} />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<ChartTooltipContent className="max-w-56" labelClassName="break-all" />} />
                 <Bar dataKey="y" fill="var(--color-y)" radius={4} />
               </BarChart>
             ) : (
@@ -67,7 +80,7 @@ export function ResultChart({ spec }: { spec: ChartSpec }) {
                 <CartesianGrid vertical={false} />
                 <XAxis dataKey="x" tickLine={false} axisLine={false} minTickGap={32} />
                 <YAxis tickLine={false} axisLine={false} width={64} tickFormatter={(v: number) => v.toLocaleString()} />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip content={<ChartTooltipContent className="max-w-56" labelClassName="break-all" />} />
                 <Line dataKey="y" type="monotone" stroke="var(--color-y)" strokeWidth={2} dot={spec.data.length <= 40} />
               </LineChart>
             )}
