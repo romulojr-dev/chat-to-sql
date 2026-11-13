@@ -113,7 +113,7 @@ export function Workbench({ about }: { about: ReactNode }) {
       {asked === null || suggest.status === "idle" ? (
         <>
           <section className="mx-auto flex min-h-[calc(100svh-3.1rem-12rem)] w-full max-w-3xl flex-col items-center justify-center gap-6 px-4 py-10">
-            <h2 className="text-center text-3xl font-semibold tracking-tight sm:text-4xl">
+            <h2 className="text-center text-[clamp(1.25rem,6.4vw,2.25rem)] font-semibold tracking-tight">
               What do you want to analyze?
             </h2>
             <QuestionBox question={question} onChange={setQuestion} onSubmit={() => onSuggest()} inputRef={promptRef} />

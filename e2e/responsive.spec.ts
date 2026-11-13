@@ -181,3 +181,19 @@ test("example chips that wrap onto two lines are center aligned on a phone", asy
   }
   expect(wrapped, "at least one chip should wrap at 320px, or this test checks nothing").toBeGreaterThan(0);
 });
+
+test('the "What do you want to analyze?" heading stays on one line from 320px up', async ({ page }) => {
+  for (const width of [320, 360, 375, 414, 480, 640, 768, 1024, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    const h = page.getByRole("heading", { name: "What do you want to analyze?" });
+    const { height, lineHeight, overflow } = await h.evaluate((el) => ({
+      height: el.getBoundingClientRect().height,
+      lineHeight: parseFloat(getComputedStyle(el).lineHeight),
+      overflow: el.scrollWidth > el.clientWidth,
+    }));
+    expect(height / lineHeight, `${width}px: heading wraps`).toBeLessThan(1.5);
+    expect(overflow, `${width}px: heading overflows`).toBe(false);
+  }
+});
