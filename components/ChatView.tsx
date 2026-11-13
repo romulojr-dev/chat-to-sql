@@ -66,7 +66,7 @@ export function ChatView({ question, suggest, sql, onSqlChange, onRun, run, slow
         </div>
 
         <div className="min-w-0 flex-1 space-y-4">
-          <p className="text-muted-foreground text-xs font-semibold">SiyasatQL agent</p>
+          <p className="text-muted-foreground text-xs font-semibold">SiyasatQL</p>
 
           <section aria-live="polite" aria-busy={suggest.status === "loading"} className="space-y-3">
             <AgentTrace suggest={suggest} />

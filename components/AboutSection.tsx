@@ -16,7 +16,7 @@ export function AboutSection() {
           About SiyasatQL
         </h2>
         <p className="max-w-2xl leading-relaxed">
-          Ask questions about a real e-commerce database in plain English. SiyasatQL&apos;s AI agent writes a read-only
+          Ask questions about a real e-commerce database in plain English. SiyasatQL writes a read-only
           SQL query, shows you its steps, and waits for you to review it and click Run. Then you get a table and, when
           one fits, a chart.
         </p>
