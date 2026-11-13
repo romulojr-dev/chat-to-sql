@@ -126,3 +126,39 @@ test("header, prompt box and About text share one left edge on desktop", async (
     void prompt;
   }
 });
+
+// WCAG 2.2 "target size (minimum)" is 24 x 24 px; inline links are exempt from it, but small
+// links are still hard to hit on a phone, so every link and control is held to the bar.
+for (const width of [320, 1440]) {
+  test(`links and controls are at least 24px tall at ${width}px (home and results)`, async ({ page }) => {
+    const tooSmall = () =>
+      page.evaluate(() =>
+        [...document.querySelectorAll("a, button, [role=tab], textarea, input")]
+          .map((e) => ({ e, r: e.getBoundingClientRect() }))
+          .filter(({ r }) => r.width > 0 && (r.height < 24 || r.width < 24))
+          .map(({ e, r }) => `${e.tagName}:${(e.getAttribute("aria-label") || e.textContent || "").trim().slice(0, 30)} ${Math.round(r.width)}x${Math.round(r.height)}`),
+      );
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    expect(await tooSmall(), "home").toEqual([]);
+    await openResults(page, width);
+    expect(await tooSmall(), "results").toEqual([]);
+  });
+}
+
+test("the longest identifier in a typical query fits on one line of the SQL box on a phone", async ({ page }) => {
+  await openResults(page, 320);
+  const fits = await page.getByLabel("SQL query").evaluate((ta) => {
+    const cs = getComputedStyle(ta);
+    const inner = ta.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const probe = document.createElement("span");
+    probe.style.cssText = `font:${cs.font};letter-spacing:${cs.letterSpacing};position:absolute;visibility:hidden;white-space:pre`;
+    probe.textContent = "p.product_category_name_english"; // 31 characters, the kind of name the model writes
+    document.body.appendChild(probe);
+    const w = probe.getBoundingClientRect().width;
+    probe.remove();
+    return { inner, w };
+  });
+  expect(fits.w, `identifier is ${fits.w}px but a line is ${fits.inner}px`).toBeLessThanOrEqual(fits.inner);
+});

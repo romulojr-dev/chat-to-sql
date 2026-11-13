@@ -41,10 +41,10 @@ export function ChatView({ question, suggest, sql, onSqlChange, onRun, run, slow
         {question}
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex gap-2 sm:gap-3">
         {/* Pixel-art dino on a primary-colored circle. The dino is the inverse of the circle: white on black in light
             mode, dark on light in dark mode. It follows the theme toggle (the "auto" file follows only the OS setting). */}
-        <div aria-hidden="true" className="bg-primary flex size-9 shrink-0 items-center justify-center rounded-full">
+        <div aria-hidden="true" className="bg-primary flex size-7 shrink-0 items-center sm:size-9 justify-center rounded-full">
           <Image
             src="/dino/dino-dark.svg"
             alt=""

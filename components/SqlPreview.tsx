@@ -34,7 +34,7 @@ export function SqlPreview({ sql, explanation, onChange, onRun, running }: Props
         }}
         spellCheck={false}
         rows={6}
-        className="font-mono text-sm"
+        className="font-mono text-xs sm:text-sm"
         aria-describedby="sql-hint"
       />
       <div className="flex flex-wrap items-center gap-3">

@@ -13,7 +13,7 @@ export default function Home() {
           <p>
             Data:{" "}
             <a
-              className="underline underline-offset-2"
+              className="-my-1 inline-block py-1 underline underline-offset-2"
               href="https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce"
               target="_blank"
               rel="noreferrer"
@@ -22,7 +22,7 @@ export default function Home() {
             </a>{" "}
             (Kaggle), licensed{" "}
             <a
-              className="underline underline-offset-2"
+              className="-my-1 inline-block py-1 underline underline-offset-2"
               href="https://creativecommons.org/licenses/by-nc-sa/4.0/"
               target="_blank"
               rel="noreferrer"

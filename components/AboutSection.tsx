@@ -62,7 +62,7 @@ export function AboutSection() {
           These numbers describe this 60-question set on this dataset, not text-to-SQL in general, and the model varies
           from run to run, so an occasional wrong answer is expected. Always read the SQL before you run it.{" "}
           <a
-            className="text-foreground underline underline-offset-2"
+            className="text-foreground -my-1 inline-block py-1 underline underline-offset-2"
             href="https://github.com/romulojr-dev/chat-to-sql/blob/main/docs/eval-results.md"
             target="_blank"
             rel="noreferrer"
@@ -74,12 +74,12 @@ export function AboutSection() {
 
         <p className="max-w-2xl leading-relaxed">
           SiyasatQL was built by <strong>Romulo Ramos Jr.</strong> To get in touch, email{" "}
-          <a className="underline underline-offset-2" href="mailto:romu.dev@outlook.com">
+          <a className="-my-1 inline-block py-1 underline underline-offset-2" href="mailto:romu.dev@outlook.com">
             romu.dev@outlook.com
           </a>{" "}
           or send a message on{" "}
           <a
-            className="underline underline-offset-2"
+            className="-my-1 inline-block py-1 underline underline-offset-2"
             href="https://www.linkedin.com/in/romulo-dev/"
             target="_blank"
             rel="noreferrer"
